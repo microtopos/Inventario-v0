@@ -1,0 +1,1598 @@
+{
+  "departamentos": [
+    {
+      "id": 1,
+      "nombre": "Conserjes"
+    },
+    {
+      "id": 2,
+      "nombre": "Conserjes Deportes"
+    },
+    {
+      "id": 3,
+      "nombre": "Limpieza Edificios"
+    },
+    {
+      "id": 4,
+      "nombre": "Obras y Servicios"
+    }
+  ],
+  "productos": [
+    {
+      "id": 1,
+      "sku": "2.09 - 2.10",
+      "nombre": "CAMISA MANGA LARGA AZUL CELESTE (HOMBRE - MUJER)",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "2XL",
+          "cantidad": 6
+        },
+        {
+          "talla": "L",
+          "cantidad": 10
+        },
+        {
+          "talla": "M",
+          "cantidad": 9
+        },
+        {
+          "talla": "S",
+          "cantidad": 12
+        },
+        {
+          "talla": "XL",
+          "cantidad": 13
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "sku": "1.01",
+      "nombre": "ANORAK AZUL MARINO COMBINADO",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "XS",
+          "cantidad": 8
+        },
+        {
+          "talla": "S",
+          "cantidad": 6
+        },
+        {
+          "talla": "M",
+          "cantidad": 3
+        },
+        {
+          "talla": "L",
+          "cantidad": 3
+        },
+        {
+          "talla": "XL",
+          "cantidad": 11
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 6
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 5
+        },
+        {
+          "talla": "4XL",
+          "cantidad": 10
+        },
+        {
+          "talla": "5XL",
+          "cantidad": 8
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "sku": "1.08",
+      "nombre": "CAMISA MANGA CORTA COMBINADO EN AV",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 13
+        },
+        {
+          "talla": "M",
+          "cantidad": 10
+        },
+        {
+          "talla": "L",
+          "cantidad": 10
+        },
+        {
+          "talla": "XL",
+          "cantidad": 10
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 4
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 10
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "sku": "1.07",
+      "nombre": "CAMISA MANGA LARGA COMBINADO EN AV",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 5
+        },
+        {
+          "talla": "M",
+          "cantidad": 3
+        },
+        {
+          "talla": "L",
+          "cantidad": 9
+        },
+        {
+          "talla": "XL",
+          "cantidad": 3
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 2
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "sku": "1.02",
+      "nombre": "CHAQUETA FORRO POLAR COMBINADO AV",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 10
+        },
+        {
+          "talla": "M",
+          "cantidad": 14
+        },
+        {
+          "talla": "L",
+          "cantidad": 9
+        },
+        {
+          "talla": "XL",
+          "cantidad": 12
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 11
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 10
+        },
+        {
+          "talla": "4XL",
+          "cantidad": 8
+        },
+        {
+          "talla": "5XL",
+          "cantidad": 10
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "sku": "3.07",
+      "nombre": "CHAQUETA FORRO POLAR GRIS",
+      "departamento_id": 3,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 9
+        },
+        {
+          "talla": "M",
+          "cantidad": 3
+        },
+        {
+          "talla": "L",
+          "cantidad": 5
+        },
+        {
+          "talla": "XL",
+          "cantidad": 8
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 5
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 6
+        },
+        {
+          "talla": "4XL",
+          "cantidad": 4
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "sku": "3.07",
+      "nombre": "CHAQUETA FORRO POLAR GRIS SEÑORA",
+      "departamento_id": 3,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 1
+        },
+        {
+          "talla": "M",
+          "cantidad": 4
+        },
+        {
+          "talla": "L",
+          "cantidad": 1
+        },
+        {
+          "talla": "XL",
+          "cantidad": 1
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 3
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "sku": "2.18",
+      "nombre": "CHAQUETA FORRO POLAR MARINO HOMBRE",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "2XL",
+          "cantidad": 5
+        },
+        {
+          "talla": "4XL",
+          "cantidad": 2
+        },
+        {
+          "talla": "L",
+          "cantidad": 4
+        },
+        {
+          "talla": "M",
+          "cantidad": 4
+        },
+        {
+          "talla": "S",
+          "cantidad": 8
+        },
+        {
+          "talla": "XL",
+          "cantidad": 3
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "sku": "2.017",
+      "nombre": "JERSEY O CHAQUETA PUNTO FINO HOMBRE",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 1
+        },
+        {
+          "talla": "L",
+          "cantidad": 9
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "sku": "2.017",
+      "nombre": "JERSEY O CHAQUETA PUNTO FINO MUJER",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 6
+        },
+        {
+          "talla": "M",
+          "cantidad": 9
+        },
+        {
+          "talla": "L",
+          "cantidad": 6
+        },
+        {
+          "talla": "XL",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "sku": "2.04",
+      "nombre": "PANTALON CHINO HOMBRE VERANO",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "38",
+          "cantidad": 3
+        },
+        {
+          "talla": "40",
+          "cantidad": 7
+        },
+        {
+          "talla": "42",
+          "cantidad": 9
+        },
+        {
+          "talla": "44",
+          "cantidad": 10
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        },
+        {
+          "talla": "48",
+          "cantidad": 8
+        },
+        {
+          "talla": "50",
+          "cantidad": 7
+        },
+        {
+          "talla": "52",
+          "cantidad": 6
+        },
+        {
+          "talla": "54",
+          "cantidad": 4
+        },
+        {
+          "talla": "56",
+          "cantidad": 12
+        },
+        {
+          "talla": "58",
+          "cantidad": 5
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "sku": "2.05",
+      "nombre": "PANTALON CHINO MUJER VERANO",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "36",
+          "cantidad": 11
+        },
+        {
+          "talla": "38",
+          "cantidad": 18
+        },
+        {
+          "talla": "40",
+          "cantidad": 19
+        },
+        {
+          "talla": "42",
+          "cantidad": 30
+        },
+        {
+          "talla": "44",
+          "cantidad": 32
+        },
+        {
+          "talla": "46",
+          "cantidad": 13
+        },
+        {
+          "talla": "48",
+          "cantidad": 10
+        },
+        {
+          "talla": "50",
+          "cantidad": 6
+        },
+        {
+          "talla": "52",
+          "cantidad": 12
+        },
+        {
+          "talla": "56",
+          "cantidad": 8
+        },
+        {
+          "talla": "58",
+          "cantidad": 11
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "sku": "3.02",
+      "nombre": "PANTALON GRIS MULTIBOLSILLO INVIERNO",
+      "departamento_id": 3,
+      "stock": [
+        {
+          "talla": "38",
+          "cantidad": 10
+        },
+        {
+          "talla": "46",
+          "cantidad": 9
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        },
+        {
+          "talla": "50",
+          "cantidad": 4
+        },
+        {
+          "talla": "54",
+          "cantidad": 4
+        },
+        {
+          "talla": "58",
+          "cantidad": 2
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "sku": "3.01",
+      "nombre": "PANTALON GRIS MULTIBOLSILLO VERANO",
+      "departamento_id": 3,
+      "stock": [
+        {
+          "talla": "36",
+          "cantidad": 10
+        },
+        {
+          "talla": "38",
+          "cantidad": 25
+        },
+        {
+          "talla": "40",
+          "cantidad": 13
+        },
+        {
+          "talla": "42",
+          "cantidad": 13
+        },
+        {
+          "talla": "44",
+          "cantidad": 13
+        },
+        {
+          "talla": "46",
+          "cantidad": 22
+        },
+        {
+          "talla": "48",
+          "cantidad": 15
+        },
+        {
+          "talla": "50",
+          "cantidad": 20
+        },
+        {
+          "talla": "52",
+          "cantidad": 8
+        },
+        {
+          "talla": "54",
+          "cantidad": 18
+        },
+        {
+          "talla": "56",
+          "cantidad": 14
+        },
+        {
+          "talla": "58",
+          "cantidad": 8
+        },
+        {
+          "talla": "60",
+          "cantidad": 6
+        },
+        {
+          "talla": "62",
+          "cantidad": 6
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "sku": "1.04",
+      "nombre": "PANTALON INVIERNO COMBINADO EN AV",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "36",
+          "cantidad": 10
+        },
+        {
+          "talla": "38",
+          "cantidad": 14
+        },
+        {
+          "talla": "40",
+          "cantidad": 21
+        },
+        {
+          "talla": "42",
+          "cantidad": 15
+        },
+        {
+          "talla": "44",
+          "cantidad": 14
+        },
+        {
+          "talla": "46",
+          "cantidad": 12
+        },
+        {
+          "talla": "48",
+          "cantidad": 9
+        },
+        {
+          "talla": "50",
+          "cantidad": 13
+        },
+        {
+          "talla": "52",
+          "cantidad": 14
+        },
+        {
+          "talla": "54",
+          "cantidad": 15
+        },
+        {
+          "talla": "56",
+          "cantidad": 9
+        },
+        {
+          "talla": "58",
+          "cantidad": 15
+        },
+        {
+          "talla": "60",
+          "cantidad": 10
+        },
+        {
+          "talla": "62",
+          "cantidad": 10
+        },
+        {
+          "talla": "64",
+          "cantidad": 9
+        },
+        {
+          "talla": "66",
+          "cantidad": 12
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "sku": "1.05",
+      "nombre": "PANTALON VERANO COMBINADO EN AV",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "36",
+          "cantidad": 21
+        },
+        {
+          "talla": "38",
+          "cantidad": 58
+        },
+        {
+          "talla": "40",
+          "cantidad": 26
+        },
+        {
+          "talla": "42",
+          "cantidad": 16
+        },
+        {
+          "talla": "44",
+          "cantidad": 21
+        },
+        {
+          "talla": "46",
+          "cantidad": 15
+        },
+        {
+          "talla": "48",
+          "cantidad": 19
+        },
+        {
+          "talla": "50",
+          "cantidad": 6
+        },
+        {
+          "talla": "52",
+          "cantidad": 42
+        },
+        {
+          "talla": "54",
+          "cantidad": 17
+        },
+        {
+          "talla": "56",
+          "cantidad": 4
+        },
+        {
+          "talla": "58",
+          "cantidad": 11
+        },
+        {
+          "talla": "60",
+          "cantidad": 10
+        },
+        {
+          "talla": "62",
+          "cantidad": 10
+        },
+        {
+          "talla": "64",
+          "cantidad": 8
+        },
+        {
+          "talla": "66",
+          "cantidad": 4
+        },
+        {
+          "talla": "S",
+          "cantidad": 28
+        },
+        {
+          "talla": "M",
+          "cantidad": 12
+        },
+        {
+          "talla": "XL",
+          "cantidad": 2
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 1
+        },
+        {
+          "talla": "5XL",
+          "cantidad": 2
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "sku": "2.06",
+      "nombre": "PANTALON VERANO MULTIBOLSILLO AZUL MARINO",
+      "departamento_id": 2,
+      "stock": [
+        {
+          "talla": "36",
+          "cantidad": 14
+        },
+        {
+          "talla": "38",
+          "cantidad": 20
+        },
+        {
+          "talla": "40",
+          "cantidad": 13
+        },
+        {
+          "talla": "42",
+          "cantidad": 13
+        },
+        {
+          "talla": "44",
+          "cantidad": 13
+        },
+        {
+          "talla": "46",
+          "cantidad": 25
+        },
+        {
+          "talla": "48",
+          "cantidad": 21
+        },
+        {
+          "talla": "50",
+          "cantidad": 11
+        },
+        {
+          "talla": "52",
+          "cantidad": 9
+        },
+        {
+          "talla": "54",
+          "cantidad": 12
+        },
+        {
+          "talla": "56 Y 58",
+          "cantidad": 14
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "sku": "2.01",
+      "nombre": "PARKA CONSERJES",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 7
+        },
+        {
+          "talla": "M",
+          "cantidad": 4
+        },
+        {
+          "talla": "L",
+          "cantidad": 6
+        },
+        {
+          "talla": "XL",
+          "cantidad": 5
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 4
+        },
+        {
+          "talla": "4XL",
+          "cantidad": 4
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "sku": null,
+      "nombre": "POLO MANGA CORTA AZUL MARINO HOMBRE",
+      "departamento_id": 2,
+      "stock": [
+        {
+          "talla": "2XL",
+          "cantidad": 1
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 2
+        },
+        {
+          "talla": "M",
+          "cantidad": 4
+        },
+        {
+          "talla": "S",
+          "cantidad": 6
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "sku": "2.15",
+      "nombre": "POLO MANGA CORTA AZUL CELESTE HOMBRE",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 10
+        },
+        {
+          "talla": "L",
+          "cantidad": 14
+        },
+        {
+          "talla": "XL",
+          "cantidad": 4
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 28
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 21
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "sku": "2.16",
+      "nombre": "POLO MANGA CORTA AZUL CELESTE MUJER",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 4
+        },
+        {
+          "talla": "M",
+          "cantidad": 5
+        },
+        {
+          "talla": "L",
+          "cantidad": 5
+        },
+        {
+          "talla": "XL",
+          "cantidad": 7
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 2
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 5
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "sku": null,
+      "nombre": "POLO MANGA CORTA AZUL MARINO MUJER",
+      "departamento_id": 2,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 4
+        },
+        {
+          "talla": "M",
+          "cantidad": 3
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "sku": "3.06",
+      "nombre": "POLO MANGA CORTA BLANCO MUJER",
+      "departamento_id": 3,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 12
+        },
+        {
+          "talla": "M",
+          "cantidad": 11
+        },
+        {
+          "talla": "L",
+          "cantidad": 12
+        },
+        {
+          "talla": "XL",
+          "cantidad": 2
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 2
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "sku": "2.13",
+      "nombre": "POLO MANGA LARGA AZUL CELESTE HOMBRE",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 7
+        },
+        {
+          "talla": "M",
+          "cantidad": 10
+        },
+        {
+          "talla": "L",
+          "cantidad": 5
+        },
+        {
+          "talla": "XL",
+          "cantidad": 9
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 10
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 8
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "sku": "2.14",
+      "nombre": "POLO MANGA LARGA AZUL CELESTE MUJER",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "M",
+          "cantidad": 22
+        },
+        {
+          "talla": "L",
+          "cantidad": 7
+        },
+        {
+          "talla": "XL",
+          "cantidad": 21
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 12
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 6
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "sku": null,
+      "nombre": "POLO MANGA LARGA AZUL MARINO",
+      "departamento_id": 2,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 6
+        },
+        {
+          "talla": "M",
+          "cantidad": 7
+        },
+        {
+          "talla": "L",
+          "cantidad": 5
+        },
+        {
+          "talla": "XL",
+          "cantidad": 3
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 3
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 4
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "sku": "1.07",
+      "nombre": "POLO MANGA LARGA COMBINADO EN AV",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 17
+        },
+        {
+          "talla": "M",
+          "cantidad": 15
+        },
+        {
+          "talla": "L",
+          "cantidad": 17
+        },
+        {
+          "talla": "XL",
+          "cantidad": 27
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 12
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 16
+        },
+        {
+          "talla": "4XL",
+          "cantidad": 16
+        },
+        {
+          "talla": "5XL",
+          "cantidad": 10
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "sku": null,
+      "nombre": "POLO SEÑORA AZUL MARINO MUJER",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 2
+        },
+        {
+          "talla": "M",
+          "cantidad": 4
+        },
+        {
+          "talla": "L",
+          "cantidad": 2
+        },
+        {
+          "talla": "XL",
+          "cantidad": 2
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "sku": "3.03 - 3.04",
+      "nombre": "POLO MANGA LARGA BLANCO HOMBRE",
+      "departamento_id": 3,
+      "stock": [
+        {
+          "talla": "2XL",
+          "cantidad": 6
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 5
+        },
+        {
+          "talla": "L",
+          "cantidad": 8
+        },
+        {
+          "talla": "M",
+          "cantidad": 4
+        },
+        {
+          "talla": "S",
+          "cantidad": 17
+        },
+        {
+          "talla": "XL",
+          "cantidad": 3
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "sku": "3.08",
+      "nombre": "SUDADERA GRIS CUELLO REDONDO",
+      "departamento_id": 3,
+      "stock": [
+        {
+          "talla": "XS",
+          "cantidad": 2
+        },
+        {
+          "talla": "S",
+          "cantidad": 8
+        },
+        {
+          "talla": "M",
+          "cantidad": 1
+        },
+        {
+          "talla": "XL",
+          "cantidad": 1
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 2
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "sku": "3.03",
+      "nombre": "POLO MANGA LARGA BLANCO MUJER",
+      "departamento_id": 3,
+      "stock": [
+        {
+          "talla": "M",
+          "cantidad": 4
+        },
+        {
+          "talla": "L",
+          "cantidad": 10
+        },
+        {
+          "talla": "XL",
+          "cantidad": 13
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 2
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "sku": null,
+      "nombre": "ZAPATILLAS",
+      "departamento_id": 3,
+      "stock": [
+        {
+          "talla": "36",
+          "cantidad": 8
+        },
+        {
+          "talla": "37",
+          "cantidad": 1
+        },
+        {
+          "talla": "38",
+          "cantidad": 6
+        },
+        {
+          "talla": "39",
+          "cantidad": 6
+        },
+        {
+          "talla": "40",
+          "cantidad": 10
+        },
+        {
+          "talla": "41",
+          "cantidad": 7
+        },
+        {
+          "talla": "42",
+          "cantidad": 10
+        },
+        {
+          "talla": "43",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        },
+        {
+          "talla": "45",
+          "cantidad": 3
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        },
+        {
+          "talla": "47",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "sku": "3.05",
+      "nombre": "POLO MANGA CORTA BLANCO HOMBRE",
+      "departamento_id": 3,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 2
+        },
+        {
+          "talla": "M",
+          "cantidad": 2
+        },
+        {
+          "talla": "L",
+          "cantidad": 5
+        },
+        {
+          "talla": "XL",
+          "cantidad": 5
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 5
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "sku": "2.02",
+      "nombre": "PANTALON CHINO MUJER INVIERNO",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "36",
+          "cantidad": 4
+        },
+        {
+          "talla": "38",
+          "cantidad": 8
+        },
+        {
+          "talla": "40",
+          "cantidad": 8
+        },
+        {
+          "talla": "42",
+          "cantidad": 12
+        },
+        {
+          "talla": "44",
+          "cantidad": 8
+        },
+        {
+          "talla": "46",
+          "cantidad": 12
+        },
+        {
+          "talla": "48",
+          "cantidad": 7
+        },
+        {
+          "talla": "50",
+          "cantidad": 8
+        },
+        {
+          "talla": "52",
+          "cantidad": 6
+        },
+        {
+          "talla": "54",
+          "cantidad": 8
+        },
+        {
+          "talla": "56",
+          "cantidad": 2
+        },
+        {
+          "talla": "58",
+          "cantidad": 2
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "sku": "2.02",
+      "nombre": "PANTALON CHINO INVIERNO HOMBRE",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "40",
+          "cantidad": 6
+        },
+        {
+          "talla": "42",
+          "cantidad": 9
+        },
+        {
+          "talla": "44",
+          "cantidad": 10
+        },
+        {
+          "talla": "46",
+          "cantidad": 6
+        },
+        {
+          "talla": "48",
+          "cantidad": 8
+        },
+        {
+          "talla": "50",
+          "cantidad": 7
+        },
+        {
+          "talla": "52",
+          "cantidad": 6
+        },
+        {
+          "talla": "54",
+          "cantidad": 4
+        },
+        {
+          "talla": "56",
+          "cantidad": 12
+        },
+        {
+          "talla": "58",
+          "cantidad": 5
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "sku": null,
+      "nombre": "ZAPATOS",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "36",
+          "cantidad": 4
+        },
+        {
+          "talla": "37",
+          "cantidad": 1
+        },
+        {
+          "talla": "38",
+          "cantidad": 6
+        },
+        {
+          "talla": "39",
+          "cantidad": 6
+        },
+        {
+          "talla": "40",
+          "cantidad": 10
+        },
+        {
+          "talla": "41",
+          "cantidad": 7
+        },
+        {
+          "talla": "42",
+          "cantidad": 10
+        },
+        {
+          "talla": "43",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 1
+        },
+        {
+          "talla": "45",
+          "cantidad": 3
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "sku": null,
+      "nombre": "FORRO POLAR AZUL MARINO MUJER",
+      "departamento_id": 1,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 4
+        },
+        {
+          "talla": "M",
+          "cantidad": 5
+        },
+        {
+          "talla": "L",
+          "cantidad": 3
+        },
+        {
+          "talla": "XL",
+          "cantidad": 6
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 3
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "sku": "1.08",
+      "nombre": "POLO MANGA CORTA COMBINADO EN AV",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 24
+        },
+        {
+          "talla": "M",
+          "cantidad": 46
+        },
+        {
+          "talla": "L",
+          "cantidad": 34
+        },
+        {
+          "talla": "XL",
+          "cantidad": 32
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 52
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 31
+        },
+        {
+          "talla": "4XL",
+          "cantidad": 16
+        },
+        {
+          "talla": "5XL",
+          "cantidad": 8
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "sku": "1.14",
+      "nombre": "TRAJE DE AGUA ALTA VISIBILIDAD",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "S",
+          "cantidad": 14
+        },
+        {
+          "talla": "M",
+          "cantidad": 12
+        },
+        {
+          "talla": "XL",
+          "cantidad": 4
+        },
+        {
+          "talla": "2XL",
+          "cantidad": 7
+        },
+        {
+          "talla": "3XL",
+          "cantidad": 5
+        },
+        {
+          "talla": "4XL",
+          "cantidad": 5
+        },
+        {
+          "talla": "5XL",
+          "cantidad": 5
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "sku": null,
+      "nombre": "CALZADO U POWER",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "37",
+          "cantidad": 3
+        },
+        {
+          "talla": "38",
+          "cantidad": 2
+        },
+        {
+          "talla": "39",
+          "cantidad": 2
+        },
+        {
+          "talla": "40",
+          "cantidad": 2
+        },
+        {
+          "talla": "41",
+          "cantidad": 7
+        },
+        {
+          "talla": "43",
+          "cantidad": 10
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        },
+        {
+          "talla": "45",
+          "cantidad": 3
+        },
+        {
+          "talla": "46",
+          "cantidad": 5
+        },
+        {
+          "talla": "47",
+          "cantidad": 5
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "sku": null,
+      "nombre": "CALZADO NORMAL",
+      "departamento_id": 4,
+      "stock": [
+        {
+          "talla": "36",
+          "cantidad": 12
+        },
+        {
+          "talla": "37",
+          "cantidad": 9
+        },
+        {
+          "talla": "38",
+          "cantidad": 9
+        },
+        {
+          "talla": "39",
+          "cantidad": 8
+        },
+        {
+          "talla": "40",
+          "cantidad": 6
+        },
+        {
+          "talla": "41",
+          "cantidad": 9
+        },
+        {
+          "talla": "42",
+          "cantidad": 6
+        },
+        {
+          "talla": "43",
+          "cantidad": 16
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "47",
+          "cantidad": 3
+        }
+      ]
+    }
+  ]
+}
