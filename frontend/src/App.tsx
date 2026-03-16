@@ -145,6 +145,13 @@ function App() {
         const copy = data?.find((p: any) => p.id === newId)
         if (copy) setSelectedProduct(copy)
       }}
+      onProductUpdated={async (changes: any) => {
+        // Actualiza el objeto selectedProduct en memoria para que el header
+        // y el breadcrumb reflejen el nuevo nombre sin parpadeo
+        setSelectedProduct((prev: any) => ({ ...prev, ...changes }))
+        // Refresca el array inventory para que la tabla/cuadrícula esté al día
+        await loadInventory()
+      }}
     />
   }
   if (showForm) {

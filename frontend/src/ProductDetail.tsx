@@ -281,69 +281,6 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
                           departamento_id: editDepartamentoId,
                           departamento: editDepartamentoNombre,
                         })
-                        // Notificar al padre para que refresque selectedProduct e inventory
-                        onProductUpdated?.({
-                          nombre: editNombre.trim(),
-                          codigo: editCodigo.trim(),
-                          departamento_id: editDepartamentoId,
-                          departamento: editDepartamentoNombre,
-                        })
-                        // Notificar al padre para que refresque selectedProduct e inventory
-                        onProductUpdated?.({
-                          nombre: editNombre.trim(),
-                          codigo: editCodigo.trim(),
-                          departamento_id: editDepartamentoId,
-                          departamento: editDepartamentoNombre,
-                        })
-                        // Notificar al padre para que refresque selectedProduct e inventory
-                        onProductUpdated?.({
-                          nombre: editNombre.trim(),
-                          codigo: editCodigo.trim(),
-                          departamento_id: editDepartamentoId,
-                          departamento: editDepartamentoNombre,
-                        })
-                        // Notificar al padre para que refresque selectedProduct e inventory
-                        onProductUpdated?.({
-                          nombre: editNombre.trim(),
-                          codigo: editCodigo.trim(),
-                          departamento_id: editDepartamentoId,
-                          departamento: editDepartamentoNombre,
-                        })
-                        // Notificar al padre para que refresque selectedProduct e inventory
-                        onProductUpdated?.({
-                          nombre: editNombre.trim(),
-                          codigo: editCodigo.trim(),
-                          departamento_id: editDepartamentoId,
-                          departamento: editDepartamentoNombre,
-                        })
-                        // Notificar al padre para que refresque selectedProduct e inventory
-                        onProductUpdated?.({
-                          nombre: editNombre.trim(),
-                          codigo: editCodigo.trim(),
-                          departamento_id: editDepartamentoId,
-                          departamento: editDepartamentoNombre,
-                        })
-                        // Notificar al padre para que refresque selectedProduct e inventory
-                        onProductUpdated?.({
-                          nombre: editNombre.trim(),
-                          codigo: editCodigo.trim(),
-                          departamento_id: editDepartamentoId,
-                          departamento: editDepartamentoNombre,
-                        })
-                        // Notificar al padre para que refresque selectedProduct e inventory
-                        onProductUpdated?.({
-                          nombre: editNombre.trim(),
-                          codigo: editCodigo.trim(),
-                          departamento_id: editDepartamentoId,
-                          departamento: editDepartamentoNombre,
-                        })
-                        // Notificar al padre para que refresque selectedProduct e inventory
-                        onProductUpdated?.({
-                          nombre: editNombre.trim(),
-                          codigo: editCodigo.trim(),
-                          departamento_id: editDepartamentoId,
-                          departamento: editDepartamentoNombre,
-                        })
                       }}
                       style={{
                         padding: "5px 14px", borderRadius: "6px", border: "none",
