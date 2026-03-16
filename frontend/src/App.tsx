@@ -128,10 +128,10 @@ function App() {
     visibleInventory = visibleInventory.filter(p => p.departamento_id === departmentFilter)
   }
   if (showLowStock) {
-    visibleInventory = visibleInventory.filter(p => p.stock <= 2)
+    visibleInventory = visibleInventory.filter(p => p.min_stock <= stockThresholds.red)
   }
 
-  const lowStockCount = inventory.filter(p => p.stock <= 2).length
+  const lowStockCount = inventory.filter(p => p.min_stock <= stockThresholds.red).length
 
   if (selectedProduct) {
     return <ProductDetail
@@ -205,7 +205,7 @@ function App() {
             </div>
           </div>
           <div style={{ ...cardStyle, borderLeft: lowStockCount > 0 ? "4px solid #f59e0b" : "1px solid #e0e0e0" }}>
-            <div style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>⚠️ Stock bajo (≤2 unidades)</div>
+            <div style={{ fontSize: "13px", color: "#888", marginBottom: "6px" }}>⚠️ Stock bajo (≤{stockThresholds.red} ud. por talla)</div>
             <div style={{ fontSize: "32px", fontWeight: 700, color: lowStockCount > 0 ? "#d97706" : "#111" }}>
               {lowStockCount}
             </div>

@@ -10,7 +10,8 @@ export async function getInventory(): Promise<any[]> {
       p.departamento_id,
       p.color,
       d.nombre as departamento,
-      IFNULL(SUM(t.stock), 0) as stock
+      IFNULL(SUM(t.stock), 0) as stock,
+      IFNULL(MIN(t.stock), 0) as min_stock
     FROM productos p
     LEFT JOIN departamentos d ON d.id = p.departamento_id
     LEFT JOIN tallas t ON t.producto_id = p.id
@@ -21,14 +22,14 @@ export async function getInventory(): Promise<any[]> {
 }
 
 // Devuelve un mapa { producto_id: [{ talla, stock }] } solo con tallas de stock bajo (≤2)
-export async function getLowStockTallas(): Promise<Record<number, { talla: string; stock: number }[]>> {
+export async function getLowStockTallas(threshold: number): Promise<Record<number, { talla: string; stock: number }[]>> {
   const db = await getDB()
   const rows: any = await db.select(`
     SELECT producto_id, talla, stock
     FROM tallas
-    WHERE stock <= 2
+    WHERE stock <= ?
     ORDER BY producto_id, talla
-  `)
+  `, [threshold])
   const map: Record<number, { talla: string; stock: number }[]> = {}
   for (const r of rows) {
     if (!map[r.producto_id]) map[r.producto_id] = []
