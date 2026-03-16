@@ -129,10 +129,10 @@ function App() {
     visibleInventory = visibleInventory.filter(p => p.departamento_id === departmentFilter)
   }
   if (showLowStock) {
-    visibleInventory = visibleInventory.filter(p => p.min_stock <= stockThresholds.red)
+    visibleInventory = visibleInventory.filter(p => p.min_stock !== null && p.min_stock <= stockThresholds.red)
   }
 
-  const lowStockCount = inventory.filter(p => p.min_stock <= stockThresholds.red).length
+  const lowStockCount = inventory.filter(p => p.min_stock !== null && p.min_stock <= stockThresholds.red).length
 
   if (selectedProduct) {
     return <ProductDetail
