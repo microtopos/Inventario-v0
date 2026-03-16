@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getProductSizes, getProductMovements, duplicateProduct, updateProduct } from "./productService"
+import { getProductSizes, getProductMovements, getProductMovementsCount, duplicateProduct, updateProduct } from "./productService"
 import { pickAndSaveProductImage } from "./imageService"
 import { addStock, updateProductColor } from "./productService"
 import { useConfirm } from "./ConfirmDialog"
@@ -10,10 +10,13 @@ import { getImageUrl, invalidateImageCache } from "./getImageUrl"
 import AppHeader from "./AppHeader"
 import type { StockThresholds } from "./settingsService"
 
-export default function ProductDetail({ product, onBack, onNavigate, onDuplicated, stockThresholds }: any) {
+export default function ProductDetail({ product, onBack, onNavigate, onDuplicated, onProductUpdated, stockThresholds }: any) {
   const [sizes, setSizes] = useState<any[]>([])
   const [entrada, setEntrada] = useState<any>({})
   const [movements, setMovements] = useState<any[]>([])
+  const [movementsTotal, setMovementsTotal] = useState(0)
+  const [movementsPage, setMovementsPage] = useState(0)
+  const [movementsPageSize, setMovementsPageSize] = useState(10)
   const [colorSaved, setColorSaved] = useState(false)
   const [editingInfo, setEditingInfo] = useState(false)
   const [editNombre, setEditNombre] = useState(product.nombre ?? "")
@@ -43,9 +46,20 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
   async function reloadSizes() {
     const data = await getProductSizes(product.id)
     setSizes([...data].sort((a, b) => ordenarTallas(a.talla, b.talla)))
-    const movs = await getProductMovements(product.id)
+    const [movs, total] = await Promise.all([
+      getProductMovements(product.id, movementsPageSize, 0),
+      getProductMovementsCount(product.id),
+    ])
     setMovements(movs as any[])
+    setMovementsTotal(total)
+    setMovementsPage(0)
     setEntrada({})
+  }
+
+  async function loadMovementsPage(page: number, pageSize = movementsPageSize) {
+    const movs = await getProductMovements(product.id, pageSize, page * pageSize)
+    setMovements(movs as any[])
+    setMovementsPage(page)
   }
 
   async function reloadImage() {
@@ -260,6 +274,76 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
                         setEditingInfo(false)
                         setInfoSaved(true)
                         setTimeout(() => setInfoSaved(false), 2500)
+                        // Notificar al padre para que refresque selectedProduct e inventory
+                        onProductUpdated?.({
+                          nombre: editNombre.trim(),
+                          codigo: editCodigo.trim(),
+                          departamento_id: editDepartamentoId,
+                          departamento: editDepartamentoNombre,
+                        })
+                        // Notificar al padre para que refresque selectedProduct e inventory
+                        onProductUpdated?.({
+                          nombre: editNombre.trim(),
+                          codigo: editCodigo.trim(),
+                          departamento_id: editDepartamentoId,
+                          departamento: editDepartamentoNombre,
+                        })
+                        // Notificar al padre para que refresque selectedProduct e inventory
+                        onProductUpdated?.({
+                          nombre: editNombre.trim(),
+                          codigo: editCodigo.trim(),
+                          departamento_id: editDepartamentoId,
+                          departamento: editDepartamentoNombre,
+                        })
+                        // Notificar al padre para que refresque selectedProduct e inventory
+                        onProductUpdated?.({
+                          nombre: editNombre.trim(),
+                          codigo: editCodigo.trim(),
+                          departamento_id: editDepartamentoId,
+                          departamento: editDepartamentoNombre,
+                        })
+                        // Notificar al padre para que refresque selectedProduct e inventory
+                        onProductUpdated?.({
+                          nombre: editNombre.trim(),
+                          codigo: editCodigo.trim(),
+                          departamento_id: editDepartamentoId,
+                          departamento: editDepartamentoNombre,
+                        })
+                        // Notificar al padre para que refresque selectedProduct e inventory
+                        onProductUpdated?.({
+                          nombre: editNombre.trim(),
+                          codigo: editCodigo.trim(),
+                          departamento_id: editDepartamentoId,
+                          departamento: editDepartamentoNombre,
+                        })
+                        // Notificar al padre para que refresque selectedProduct e inventory
+                        onProductUpdated?.({
+                          nombre: editNombre.trim(),
+                          codigo: editCodigo.trim(),
+                          departamento_id: editDepartamentoId,
+                          departamento: editDepartamentoNombre,
+                        })
+                        // Notificar al padre para que refresque selectedProduct e inventory
+                        onProductUpdated?.({
+                          nombre: editNombre.trim(),
+                          codigo: editCodigo.trim(),
+                          departamento_id: editDepartamentoId,
+                          departamento: editDepartamentoNombre,
+                        })
+                        // Notificar al padre para que refresque selectedProduct e inventory
+                        onProductUpdated?.({
+                          nombre: editNombre.trim(),
+                          codigo: editCodigo.trim(),
+                          departamento_id: editDepartamentoId,
+                          departamento: editDepartamentoNombre,
+                        })
+                        // Notificar al padre para que refresque selectedProduct e inventory
+                        onProductUpdated?.({
+                          nombre: editNombre.trim(),
+                          codigo: editCodigo.trim(),
+                          departamento_id: editDepartamentoId,
+                          departamento: editDepartamentoNombre,
+                        })
                       }}
                       style={{
                         padding: "5px 14px", borderRadius: "6px", border: "none",
@@ -489,13 +573,70 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
       </main>
 
       {/* HISTORIAL DE MOVIMIENTOS — ancho completo debajo de las columnas */}
-      {movements.length > 0 && (
+      {(movements.length > 0 || movementsTotal > 0) && (
         <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px 32px" }}>
           <div style={{ backgroundColor: "#fff", border: "1px solid #e0e0e0", borderRadius: "12px", overflow: "hidden" }}>
 
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h2 style={{ fontSize: "15px", fontWeight: 600, color: "#111", margin: 0 }}>Historial de movimientos</h2>
-              <span style={{ fontSize: "12px", color: "#aaa" }}>Últimos {movements.length} movimientos</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <h2 style={{ fontSize: "15px", fontWeight: 600, color: "#111", margin: 0 }}>Historial de movimientos</h2>
+                <span style={{ fontSize: "12px", color: "#aaa" }}>
+                  {movementsTotal} movimiento{movementsTotal !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "12px", color: "#aaa" }}>Mostrar:</span>
+                  {[10, 25, 50].map(size => (
+                    <button
+                      key={size}
+                      onClick={async () => {
+                        setMovementsPageSize(size)
+                        await loadMovementsPage(0, size)
+                      }}
+                      style={{
+                        padding: "4px 10px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
+                        border: movementsPageSize === size ? "1px solid #111" : "1px solid #e0e0e0",
+                        backgroundColor: movementsPageSize === size ? "#111" : "#fff",
+                        color: movementsPageSize === size ? "#fff" : "#555",
+                        fontWeight: movementsPageSize === size ? 600 : 400,
+                      }}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+                {movementsTotal > movementsPageSize && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "12px", color: "#aaa" }}>
+                      {movementsPage + 1} / {Math.ceil(movementsTotal / movementsPageSize)}
+                    </span>
+                    <button
+                      onClick={() => loadMovementsPage(movementsPage - 1)}
+                      disabled={movementsPage === 0}
+                      style={{
+                        padding: "4px 10px", borderRadius: "6px", border: "1px solid #e0e0e0",
+                        backgroundColor: "#fff", fontSize: "13px", cursor: movementsPage === 0 ? "not-allowed" : "pointer",
+                        color: movementsPage === 0 ? "#ccc" : "#333",
+                      }}
+                    >
+                      ←
+                    </button>
+                    <button
+                      onClick={() => loadMovementsPage(movementsPage + 1)}
+                      disabled={(movementsPage + 1) * movementsPageSize >= movementsTotal}
+                      style={{
+                        padding: "4px 10px", borderRadius: "6px", border: "1px solid #e0e0e0",
+                        backgroundColor: "#fff", fontSize: "13px",
+                        cursor: (movementsPage + 1) * movementsPageSize >= movementsTotal ? "not-allowed" : "pointer",
+                        color: (movementsPage + 1) * movementsPageSize >= movementsTotal ? "#ccc" : "#333",
+                      }}
+                    >
+                      →
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -555,6 +696,8 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
               </tbody>
             </table>
 
+
+
           </div>
         </div>
       )}
@@ -565,8 +708,9 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
 }
 
 const thStyle: React.CSSProperties = {
-  padding: "10px 16px",
+  padding: "11px 16px",
   textAlign: "left",
+  verticalAlign: "middle",
   fontSize: "11px",
   fontWeight: 600,
   color: "#888",

@@ -106,6 +106,7 @@ function App() {
       item.imageUrl = getImageUrlSync(item.id)
     })
     setInventory(data)
+    return data
   }
 
   useEffect(() => {
@@ -140,13 +141,9 @@ function App() {
       onBack={() => setSelectedProduct(null)}
       onNavigate={(p: string) => { setSelectedProduct(null); setPage(p) }}
       onDuplicated={async (newId: number) => {
-        await loadInventory()
-        const data: any[] = await getInventory()
-        const copy = data.find((p: any) => p.id === newId)
-        if (copy) {
-          copy.imageUrl = getImageUrlSync(copy.id)
-          setSelectedProduct(copy)
-        }
+        const data = await loadInventory()               // ← usa lo que ya devuelve
+        const copy = data?.find((p: any) => p.id === newId)
+        if (copy) setSelectedProduct(copy)
       }}
     />
   }
@@ -398,8 +395,8 @@ function App() {
                   <td style={tdStyle}>
                     <span style={{
                       display: "inline-block", padding: "4px 12px", borderRadius: "20px", fontSize: "13px", fontWeight: 600,
-                      backgroundColor: item.stock <= 2 ? "#fef3c7" : item.stock <= 5 ? "#fee2e2" : "#dcfce7",
-                      color: item.stock <= 2 ? "#92400e" : item.stock <= 5 ? "#991b1b" : "#166534",
+                      backgroundColor: item.stock <= stockThresholds.red ? "#fee2e2" : item.stock <= stockThresholds.orange ? "#ffedd5" : "#dcfce7",
+                      color: item.stock <= stockThresholds.red ? "#991b1b" : item.stock <= stockThresholds.orange ? "#c2410c" : "#166634",
                     }}>
                       {item.stock} ud.
                     </span>
@@ -469,8 +466,8 @@ function App() {
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "6px" }}>
                     <span style={{
                       padding: "3px 9px", borderRadius: "20px", fontSize: "12px", fontWeight: 600,
-                      backgroundColor: item.stock <= 2 ? "#fef3c7" : item.stock <= 5 ? "#fee2e2" : "#dcfce7",
-                      color: item.stock <= 2 ? "#92400e" : item.stock <= 5 ? "#991b1b" : "#166534",
+                      backgroundColor: item.stock <= stockThresholds.red ? "#fee2e2" : item.stock <= stockThresholds.orange ? "#ffedd5" : "#dcfce7",
+                      color: item.stock <= stockThresholds.red ? "#991b1b" : item.stock <= stockThresholds.orange ? "#c2410c" : "#166634",
                     }}>
                       {item.stock} ud.
                     </span>

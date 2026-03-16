@@ -89,7 +89,18 @@ export async function addColor(nombre: string): Promise<void> {
   await db.execute("INSERT OR IGNORE INTO colores (nombre) VALUES (?)", [nombre.trim()])
 }
 
-export async function getProductMovements(productId: number) {
+export async function getProductMovementsCount(productId: number): Promise<number> {
+  const db = await getDB()
+  const rows: any = await db.select(`
+    SELECT COUNT(*) as total
+    FROM movimientos m
+    JOIN tallas t ON t.id = m.talla_id
+    WHERE t.producto_id = ?
+  `, [productId])
+  return rows[0].total as number
+}
+
+export async function getProductMovements(productId: number, limit = 50, offset = 0) {
   const db = await getDB()
   const rows = await db.select(`
     SELECT
@@ -102,8 +113,8 @@ export async function getProductMovements(productId: number) {
     JOIN tallas t ON t.id = m.talla_id
     WHERE t.producto_id = ?
     ORDER BY m.fecha DESC
-    LIMIT 100
-  `, [productId])
+    LIMIT ? OFFSET ?
+  `, [productId, limit, offset])
   return rows
 }
 

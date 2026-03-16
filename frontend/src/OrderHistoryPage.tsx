@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { getOrders, getOrderDetail, receiveOrder, deleteOrder } from "./orderService"
 import AppHeader from "./AppHeader"
 import { useConfirm } from "./ConfirmDialog"
@@ -47,6 +47,16 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
   const [filter, setFilter] = useState<"all" | "pending" | "received">("all")
   const { confirm, alert, dialog } = useConfirm()
 
+  // Barrera síncrona: evita doble-clic antes de que receiving (async) se actualice
+  const receivingRef = useRef(false)
+  // Guarda de desmontaje: evita setState después de desmontar el componente
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
+
   useEffect(() => {
     loadOrders()
   }, [])
@@ -66,18 +76,33 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
 
   async function handleReceive() {
     if (!selectedOrder) return
+    if (receivingRef.current) return // barrera síncrona anti-doble-clic
+
     const ok = await confirm(
       `¿Marcar el pedido #${selectedOrder.id} como recibido? Esto actualizará el stock de todas las prendas incluidas.`,
       { confirmLabel: "Marcar como recibido" }
     )
     if (!ok) return
+
+    receivingRef.current = true
     setReceiving(true)
-    await receiveOrder(selectedOrder.id)
-    await loadOrders()
-    const detail = await getOrderDetail(selectedOrder.id)
-    setOrderDetail(detail)
-    setSelectedOrder((prev: any) => ({ ...prev, recibido: 1 }))
-    setReceiving(false)
+
+    try {
+      await receiveOrder(selectedOrder.id)
+
+      if (!mountedRef.current) return // componente desmontado: no tocar estado
+
+      await loadOrders()
+      const detail = await getOrderDetail(selectedOrder.id)
+
+      if (mountedRef.current) {
+        setOrderDetail(detail)
+        setSelectedOrder((prev: any) => ({ ...prev, recibido: 1 }))
+      }
+    } finally {
+      receivingRef.current = false
+      if (mountedRef.current) setReceiving(false)
+    }
   }
 
   async function handleDelete(order: any) {
