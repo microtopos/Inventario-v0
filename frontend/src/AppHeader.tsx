@@ -1,4 +1,4 @@
-type Page = "inventory" | "orders" | "orderHistory"
+type Page = "inventory" | "dashboard" | "orders" | "orderHistory"
 
 interface AppHeaderProps {
   page: Page
@@ -51,7 +51,13 @@ export default function AppHeader({ page, onNavigate, onBack, title, actions }: 
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#f5f5f5")}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = "")}
             >
-              {page === "inventory" ? "Inventario" : page === "orders" ? "Pedidos" : "Historial"}
+              {page === "inventory"
+                ? "Inventario"
+                : page === "dashboard"
+                ? "Estadísticas"
+                : page === "orders"
+                ? "Pedidos"
+                : "Historial"}
             </button>
             {title && (
               <>
@@ -70,6 +76,7 @@ export default function AppHeader({ page, onNavigate, onBack, title, actions }: 
         {actions}
         {([
           { key: "inventory", label: "📦 Inventario" },
+          { key: "dashboard", label: "📊 Estadísticas" },
           { key: "orders",    label: "🛒 Pedidos" },
           { key: "orderHistory", label: "📋 Historial" },
         ] as { key: Page; label: string }[]).map(({ key, label }) => (

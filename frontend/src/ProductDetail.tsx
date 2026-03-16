@@ -8,8 +8,9 @@ import ColorSelect from "./ColorSelect"
 import DepartmentSelect from "./DepartmentSelect"
 import { getImageUrl, invalidateImageCache } from "./getImageUrl"
 import AppHeader from "./AppHeader"
+import type { StockThresholds } from "./settingsService"
 
-export default function ProductDetail({ product, onBack, onNavigate, onDuplicated }: any) {
+export default function ProductDetail({ product, onBack, onNavigate, onDuplicated, stockThresholds }: any) {
   const [sizes, setSizes] = useState<any[]>([])
   const [entrada, setEntrada] = useState<any>({})
   const [movements, setMovements] = useState<any[]>([])
@@ -32,9 +33,16 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
   const [uploadingImage, setUploadingImage] = useState(false)
   const { confirm, dialog } = useConfirm()
 
+  const thresholds: StockThresholds = stockThresholds ?? { red: 2, orange: 5 }
+  function stockColor(stock: number): { bg: string; color: string } {
+    if (stock <= thresholds.red) return { bg: "#fee2e2", color: "#991b1b" }
+    if (stock <= thresholds.orange) return { bg: "#ffedd5", color: "#c2410c" }
+    return { bg: "#dcfce7", color: "#166534" }
+  }
+
   async function reloadSizes() {
     const data = await getProductSizes(product.id)
-    setSizes([...(data as any[])].sort((a, b) => ordenarTallas(a.talla, b.talla)))
+    setSizes([...data].sort((a, b) => ordenarTallas(a.talla, b.talla)))
     const movs = await getProductMovements(product.id)
     setMovements(movs as any[])
     setEntrada({})
@@ -399,8 +407,8 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
                         borderRadius: "20px",
                         fontSize: "13px",
                         fontWeight: 600,
-                        backgroundColor: s.stock <= 2 ? "#fee2e2" : s.stock <= 5 ? "#fef3c7" : "#dcfce7",
-                        color: s.stock <= 2 ? "#991b1b" : s.stock <= 5 ? "#92400e" : "#166534",
+                        backgroundColor: stockColor(s.stock).bg,
+                        color: stockColor(s.stock).color,
                       }}>
                         {s.stock} ud.
                       </span>

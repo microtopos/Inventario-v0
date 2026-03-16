@@ -1,15 +1,15 @@
 import { getDB } from "./db"
 import { deleteProductImage } from "./imageService"
 
-export async function getProductSizes(productId: number) {
+export async function getProductSizes(productId: number): Promise<any[]> {
   const db = await getDB()
-  const rows = await db.select(`
+  const rows: any = await db.select(`
     SELECT id, talla, stock
     FROM tallas
     WHERE producto_id = ?
     ORDER BY talla
   `, [productId])
-  return rows
+  return rows as any[]
 }
 
 export async function updateStock(tallaId: number, stock: number) {
@@ -41,10 +41,10 @@ export async function deleteProduct(productId: number) {
   await db.execute("DELETE FROM productos WHERE id = ?", [productId])
 }
 
-export async function getDepartments() {
+export async function getDepartments(): Promise<any[]> {
   const db = await getDB()
-  const rows = await db.select("SELECT id, nombre FROM departamentos ORDER BY nombre")
-  return rows
+  const rows: any = await db.select("SELECT id, nombre FROM departamentos ORDER BY nombre")
+  return rows as any[]
 }
 
 export async function addDepartment(nombre: string): Promise<number> {

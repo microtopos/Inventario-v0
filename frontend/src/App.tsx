@@ -10,6 +10,7 @@ import { getDepartments } from "./productService"
 import OrderPage from "./OrderPage"
 import OrderHistoryPage from "./OrderHistoryPage"
 import AppHeader from "./AppHeader"
+import DashboardPage from "./DashboardPage"
 import { useConfirm } from "./ConfirmDialog"
 import {
   exportInventarioPDF, exportInventarioXLSX,
@@ -17,7 +18,7 @@ import {
   exportMovimientosPDF, exportMovimientosXLSX,
   changeExportDir,
 } from "./exportService"
-import { getExportDir } from "./settingsService"
+import { getExportDir, getStockThresholds, setStockThresholds, type StockThresholds } from "./settingsService"
 
 // Miniatura para la tabla
 function ImageCell({ imageUrl }: { imageUrl: string }) {
@@ -71,13 +72,18 @@ function App() {
   const [exporting, setExporting] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [exportDir, setExportDirState] = useState<string | null>(null)
+  const [stockThresholds, setStockThresholdsState] = useState<StockThresholds>({ red: 2, orange: 5 })
+  const [thresholdInputs, setThresholdInputs] = useState({ red: "2", orange: "5" })
   const exportRef = useRef<HTMLDivElement>(null)
-  const scrollPosRef = useRef<number>(0)
   const { confirm, dialog } = useConfirm()
 
   // Carga la carpeta de exportación guardada al arrancar
   useEffect(() => {
     getExportDir().then(setExportDirState)
+    getStockThresholds().then(t => {
+      setStockThresholdsState(t)
+      setThresholdInputs({ red: String(t.red), orange: String(t.orange) })
+    })
   }, [])
 
   // Cierra el menú al hacer clic fuera
@@ -92,7 +98,7 @@ function App() {
   }, [])
 
   async function loadInventory() {
-    const data = await getInventory() as any[]
+    const data = await getInventory()
     // Precargamos todas las imágenes en paralelo (una sola tanda de IPCs)
     await preloadImages(data.map((p: any) => p.id))
     // Ahora la asignación es síncrona desde caché
@@ -104,7 +110,7 @@ function App() {
 
   useEffect(() => {
     async function init() {
-      const deps = await getDepartments() as any[]
+      const deps = await getDepartments()
       setDepartments(deps)
       await importInventory()
       await loadInventory()
@@ -130,17 +136,12 @@ function App() {
   if (selectedProduct) {
     return <ProductDetail
       product={selectedProduct}
-      onBack={() => {
-        setSelectedProduct(null)
-        // Restaurar scroll en el siguiente frame
-        requestAnimationFrame(() => {
-          window.scrollTo(0, scrollPosRef.current)
-        })
-      }}
+      stockThresholds={stockThresholds}
+      onBack={() => setSelectedProduct(null)}
       onNavigate={(p: string) => { setSelectedProduct(null); setPage(p) }}
       onDuplicated={async (newId: number) => {
         await loadInventory()
-        const data: any = await import("./inventoryService").then(m => m.getInventory())
+        const data: any[] = await getInventory()
         const copy = data.find((p: any) => p.id === newId)
         if (copy) {
           copy.imageUrl = getImageUrlSync(copy.id)
@@ -165,6 +166,9 @@ function App() {
   }
   if (page === "orderHistory") {
     return <OrderHistoryPage onNavigate={setPage} />
+  }
+  if (page === "dashboard") {
+    return <DashboardPage onNavigate={setPage as any} />
   }
 
   return (
@@ -385,10 +389,7 @@ function App() {
                   <td style={{ ...tdStyle, fontSize: "13px", color: "#888", fontFamily: "monospace" }}>{item.codigo || "—"}</td>
                   <td
                     style={{ ...tdStyle, fontWeight: 600, color: "#2563eb", cursor: "pointer" }}
-                    onClick={() => {
-                      scrollPosRef.current = window.scrollY
-                      setSelectedProduct(item)
-                    }}
+                    onClick={() => setSelectedProduct(item)}
                   >
                     {item.nombre}
                   </td>
@@ -397,8 +398,8 @@ function App() {
                   <td style={tdStyle}>
                     <span style={{
                       display: "inline-block", padding: "4px 12px", borderRadius: "20px", fontSize: "13px", fontWeight: 600,
-                      backgroundColor: item.stock <= 2 ? "#fee2e2" : item.stock <= 5 ? "#fef3c7" : "#dcfce7",
-                      color: item.stock <= 2 ? "#991b1b" : item.stock <= 5 ? "#92400e" : "#166534",
+                      backgroundColor: item.stock <= 2 ? "#fef3c7" : item.stock <= 5 ? "#fee2e2" : "#dcfce7",
+                      color: item.stock <= 2 ? "#92400e" : item.stock <= 5 ? "#991b1b" : "#166534",
                     }}>
                       {item.stock} ud.
                     </span>
@@ -436,10 +437,7 @@ function App() {
             {visibleInventory.map((item: any) => (
               <div
                 key={item.id}
-                onClick={() => {
-                  scrollPosRef.current = window.scrollY
-                  setSelectedProduct(item)
-                }}
+                onClick={() => setSelectedProduct(item)}
                 style={{
                   backgroundColor: "#fff",
                   border: "1px solid #e0e0e0",
@@ -545,12 +543,79 @@ function App() {
                 </div>
               </div>
 
+              {/* UMBRALES DE COLOR DE TALLAS */}
+              <div style={{ marginBottom: "24px" }}>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>
+                  Umbrales de color por talla
+                </div>
+                <div style={{ fontSize: "12px", color: "#aaa", marginBottom: "14px" }}>
+                  Define cuántas unidades marcan el límite entre verde, naranja y rojo en el stock de cada talla.
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  {/* ROJO */}
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#dc2626", display: "inline-block" }} />
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: "#555" }}>Rojo (crítico) — ≤</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <input
+                        type="number"
+                        min={0}
+                        value={thresholdInputs.red}
+                        onChange={e => setThresholdInputs(t => ({ ...t, red: e.target.value }))}
+                        style={{ width: "70px", padding: "8px 10px", borderRadius: "7px", border: "1px solid #e0e0e0", fontSize: "14px", textAlign: "center" }}
+                      />
+                      <span style={{ fontSize: "12px", color: "#aaa" }}>unidades</span>
+                    </div>
+                  </div>
+                  {/* NARANJA */}
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#f97316", display: "inline-block" }} />
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: "#555" }}>Naranja (aviso) — ≤</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <input
+                        type="number"
+                        min={0}
+                        value={thresholdInputs.orange}
+                        onChange={e => setThresholdInputs(t => ({ ...t, orange: e.target.value }))}
+                        style={{ width: "70px", padding: "8px 10px", borderRadius: "7px", border: "1px solid #e0e0e0", fontSize: "14px", textAlign: "center" }}
+                      />
+                      <span style={{ fontSize: "12px", color: "#aaa" }}>unidades</span>
+                    </div>
+                  </div>
+                </div>
+                {/* Preview de los colores */}
+                <div style={{ marginTop: "14px", display: "flex", gap: "8px", alignItems: "center" }}>
+                  <span style={{ fontSize: "11px", color: "#aaa", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Preview:</span>
+                  <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, backgroundColor: "#fee2e2", color: "#991b1b" }}>
+                    0–{thresholdInputs.red || "?"} ud. 🔴
+                  </span>
+                  <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, backgroundColor: "#ffedd5", color: "#c2410c" }}>
+                    {Number(thresholdInputs.red || 0) + 1}–{thresholdInputs.orange || "?"} ud. 🟠
+                  </span>
+                  <span style={{ padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, backgroundColor: "#dcfce7", color: "#166534" }}>
+                    &gt;{thresholdInputs.orange || "?"} ud. 🟢
+                  </span>
+                </div>
+              </div>
+
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button
-                  onClick={() => setShowSettings(false)}
+                  onClick={async () => {
+                    const red = Math.max(0, Number(thresholdInputs.red) || 0)
+                    const orange = Math.max(red, Number(thresholdInputs.orange) || 0)
+                    const t = { red, orange }
+                    await setStockThresholds(t)
+                    setStockThresholdsState(t)
+                    setThresholdInputs({ red: String(red), orange: String(orange) })
+                    setShowSettings(false)
+                  }}
                   style={{ padding: "9px 22px", borderRadius: "8px", border: "none", backgroundColor: "#111", color: "#fff", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}
                 >
-                  Cerrar
+                  Guardar y cerrar
                 </button>
               </div>
             </div>

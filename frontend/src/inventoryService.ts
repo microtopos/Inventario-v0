@@ -1,8 +1,8 @@
 import { getDB } from "./db"
 
-export async function getInventory() {
+export async function getInventory(): Promise<any[]> {
   const db = await getDB()
-  const rows = await db.select(`
+  const rows: any = await db.select(`
     SELECT
       p.id,
       p.codigo,
@@ -17,7 +17,7 @@ export async function getInventory() {
     GROUP BY p.id
     ORDER BY p.nombre
   `)
-  return rows
+  return rows as any[]
 }
 
 // Devuelve un mapa { producto_id: [{ talla, stock }] } solo con tallas de stock bajo (≤2)
@@ -37,7 +37,7 @@ export async function getLowStockTallas(): Promise<Record<number, { talla: strin
   return map
 }
 
-export async function getProductsWithSizes() {
+export async function getProductsWithSizes(): Promise<any[]> {
   const db = await getDB()
   const productos: any = await db.select(`
     SELECT p.id, p.codigo, p.nombre, p.color, d.nombre as departamento
@@ -52,12 +52,12 @@ export async function getProductsWithSizes() {
     `, [p.id])
     p.tallas = tallas
   }
-  return productos
+  return productos as any[]
 }
 
-export async function getAllMovements() {
+export async function getAllMovements(): Promise<any[]> {
   const db = await getDB()
-  const rows = await db.select(`
+  const rows: any = await db.select(`
     SELECT
       m.id,
       m.cambio,
@@ -73,5 +73,5 @@ export async function getAllMovements() {
     LEFT JOIN departamentos d ON d.id = p.departamento_id
     ORDER BY m.fecha DESC
   `)
-  return rows
+  return rows as any[]
 }

@@ -41,3 +41,25 @@ export async function getExportDir(): Promise<string | null> {
 export async function setExportDir(dir: string): Promise<void> {
   return setSetting("exportDir", dir)
 }
+
+export interface StockThresholds {
+  red: number    // stock <= red  → rojo (crítico)
+  orange: number // stock <= orange → naranja (aviso)
+  // green = todo lo que supere orange
+}
+
+const DEFAULT_THRESHOLDS: StockThresholds = { red: 2, orange: 5 }
+
+export async function getStockThresholds(): Promise<StockThresholds> {
+  const raw = await getSetting("stockThresholds")
+  if (!raw) return DEFAULT_THRESHOLDS
+  try {
+    return JSON.parse(raw) as StockThresholds
+  } catch {
+    return DEFAULT_THRESHOLDS
+  }
+}
+
+export async function setStockThresholds(t: StockThresholds): Promise<void> {
+  return setSetting("stockThresholds", JSON.stringify(t))
+}
