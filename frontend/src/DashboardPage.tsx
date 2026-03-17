@@ -15,7 +15,8 @@ import { endOfYear, format, startOfYear, subDays, subMonths } from "date-fns"
 import {
   getConsumoPorDepartamento,
   getEntradasPorDepartamento,
-  getMovimientos,
+  getMovimientosCount,
+  getMovimientosPaged,
   getStockPorDepartamento,
 } from "./dashboardService"
 import AppHeader from "./AppHeader"
@@ -211,6 +212,9 @@ export default function DashboardPage({ onNavigate }: { onNavigate: (page: any) 
   const [entradas, setEntradas] = useState<{ mes: string; departamento: string; total: number }[]>([])
   const [consumo, setConsumo] = useState<{ mes: string; departamento: string; total: number }[]>([])
   const [movs, setMovs] = useState<any[]>([])
+  const [movsTotal, setMovsTotal] = useState(0)
+  const [movsPage, setMovsPage] = useState(0)
+  const [movsPageSize, setMovsPageSize] = useState(10)
   const [loading, setLoading] = useState(false)
 
   function applyPreset(p: RangePreset) {
@@ -237,26 +241,37 @@ export default function DashboardPage({ onNavigate }: { onNavigate: (page: any) 
       try {
         const d = desde?.trim() || undefined
         const h = hasta?.trim() || undefined
-        const [s, e, c, m] = await Promise.all([
+        const [s, e, c, total] = await Promise.all([
           getStockPorDepartamento(),
           getEntradasPorDepartamento(d, h),
           getConsumoPorDepartamento(d, h),
-          getMovimientos(d, h),
+          getMovimientosCount(d, h),
         ])
         setStock(s)
         setEntradas(e)
         setConsumo(c)
-        setMovs(m)
+        setMovsTotal(total)
+        setMovsPage(0)
+        const first = await getMovimientosPaged(movsPageSize, 0, d, h)
+        setMovs(first)
       } finally {
         setLoading(false)
       }
     }
     load()
-  }, [desde, hasta])
+  }, [desde, hasta, movsPageSize])
+
+  async function loadMovsPage(page: number, pageSize = movsPageSize) {
+    const d = desde?.trim() || undefined
+    const h = hasta?.trim() || undefined
+    const rows = await getMovimientosPaged(pageSize, page * pageSize, d, h)
+    setMovs(rows as any[])
+    setMovsPage(page)
+  }
 
   const entradasPivot = useMemo(() => pivotByMes(entradas), [entradas])
   const consumoPivot = useMemo(() => pivotByMes(consumo), [consumo])
-  const lastMovs = useMemo(() => movs.slice(0, 25), [movs])
+  const totalMovsPages = useMemo(() => Math.max(1, Math.ceil(movsTotal / movsPageSize)), [movsTotal, movsPageSize])
 
   const totalStock = useMemo(() => stock.reduce((a, r) => a + r.stock, 0), [stock])
   const totalConsumo = useMemo(() => sumPivot(consumoPivot), [consumoPivot])
@@ -428,16 +443,73 @@ export default function DashboardPage({ onNavigate }: { onNavigate: (page: any) 
           </div>
         </div>
 
-        {/* ÚLTIMOS MOVIMIENTOS */}
+        {/* HISTORIAL DE MOVIMIENTOS (paginado) */}
         <div style={{ ...cardStyle, marginTop: "16px", overflow: "hidden" }}>
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
             <div>
-              <div style={sectionTitleStyle}>Últimos movimientos</div>
+              <div style={sectionTitleStyle}>Historial de movimientos</div>
               <div style={sectionSubStyle}>
-                {lastMovs.length > 0
-                  ? `Mostrando los últimos ${lastMovs.length}, ordenados por fecha`
+                {movsTotal > 0
+                  ? `${movsTotal} movimiento${movsTotal !== 1 ? "s" : ""} (ordenados por fecha)`
                   : "Sin movimientos en el período seleccionado"}
               </div>
+            </div>
+
+            {/* Controles paginación */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "12px", color: "#aaa" }}>Mostrar:</span>
+                {[10, 25, 50].map(size => (
+                  <button
+                    key={size}
+                    onClick={async () => {
+                      setMovsPageSize(size)
+                      await loadMovsPage(0, size)
+                    }}
+                    style={{
+                      padding: "4px 10px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
+                      border: movsPageSize === size ? "1px solid #111" : "1px solid #e0e0e0",
+                      backgroundColor: movsPageSize === size ? "#111" : "#fff",
+                      color: movsPageSize === size ? "#fff" : "#555",
+                      fontWeight: movsPageSize === size ? 600 : 400,
+                    }}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+
+              {movsTotal > movsPageSize && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", color: "#aaa" }}>
+                    {movsPage + 1} / {totalMovsPages}
+                  </span>
+                  <button
+                    onClick={() => loadMovsPage(movsPage - 1)}
+                    disabled={movsPage === 0}
+                    style={{
+                      padding: "4px 10px", borderRadius: "6px", border: "1px solid #e0e0e0",
+                      backgroundColor: "#fff", fontSize: "13px",
+                      cursor: movsPage === 0 ? "not-allowed" : "pointer",
+                      color: movsPage === 0 ? "#ccc" : "#333",
+                    }}
+                  >
+                    ←
+                  </button>
+                  <button
+                    onClick={() => loadMovsPage(movsPage + 1)}
+                    disabled={(movsPage + 1) * movsPageSize >= movsTotal}
+                    style={{
+                      padding: "4px 10px", borderRadius: "6px", border: "1px solid #e0e0e0",
+                      backgroundColor: "#fff", fontSize: "13px",
+                      cursor: (movsPage + 1) * movsPageSize >= movsTotal ? "not-allowed" : "pointer",
+                      color: (movsPage + 1) * movsPageSize >= movsTotal ? "#ccc" : "#333",
+                    }}
+                  >
+                    →
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -452,14 +524,14 @@ export default function DashboardPage({ onNavigate }: { onNavigate: (page: any) 
               </tr>
             </thead>
             <tbody>
-              {lastMovs.length === 0 && (
+              {movs.length === 0 && (
                 <tr>
                   <td colSpan={6} style={{ padding: "32px 22px", color: "#bbb", textAlign: "center", fontSize: "14px" }}>
                     No hay movimientos en el rango seleccionado
                   </td>
                 </tr>
               )}
-              {lastMovs.map((m: any) => {
+              {movs.map((m: any) => {
                 const isEntrada = Number(m.cambio) > 0
                 const origen = m.origen === "pedido" ? "📦 Pedido" : m.origen ? "✏️ Manual" : "—"
                 return (
