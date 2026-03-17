@@ -21,6 +21,7 @@ import {
 import { getBackupDir, getExportDir, getStockThresholds, setStockThresholds, type StockThresholds } from "./settingsService"
 import { backupDB, changeBackupDir } from "./backupService"
 import { useToast } from "./Toast"
+import { useSortableTable } from "./useSortableTable"
 
 // Miniatura para la tabla
 function ImageCell({ imageUrl }: { imageUrl: string }) {
@@ -136,6 +137,16 @@ function App() {
   }
   if (showLowStock) {
     visibleInventory = visibleInventory.filter(p => p.min_stock !== null && p.min_stock <= stockThresholds.red)
+  }
+
+  const invSort = useSortableTable<any, "nombre" | "codigo" | "departamento" | "stock">(
+    visibleInventory as any[],
+    "nombre"
+  )
+  const sortedInventory = invSort.sorted
+  function sortArrow(key: any) {
+    if (invSort.sortKey !== key) return ""
+    return invSort.sortDir === "asc" ? " ▲" : " ▼"
   }
 
   const lowStockCount = inventory.filter(p => p.min_stock !== null && p.min_stock <= stockThresholds.red).length
@@ -380,11 +391,19 @@ function App() {
             <thead>
               <tr style={{ backgroundColor: "#fafafa", borderBottom: "2px solid #e0e0e0" }}>
                 <th style={thStyle}>Foto</th>
-                <th style={thStyle}>Código</th>
-                <th style={thStyle}>Prenda</th>
+                <th style={{ ...thStyle, cursor: "pointer", userSelect: "none" }} onClick={() => invSort.toggleSort("codigo")}>
+                  Código{sortArrow("codigo")}
+                </th>
+                <th style={{ ...thStyle, cursor: "pointer", userSelect: "none" }} onClick={() => invSort.toggleSort("nombre")}>
+                  Prenda{sortArrow("nombre")}
+                </th>
                 <th style={thStyle}>Color</th>
-                <th style={thStyle}>Departamento</th>
-                <th style={thStyle}>Stock</th>
+                <th style={{ ...thStyle, cursor: "pointer", userSelect: "none" }} onClick={() => invSort.toggleSort("departamento")}>
+                  Departamento{sortArrow("departamento")}
+                </th>
+                <th style={{ ...thStyle, cursor: "pointer", userSelect: "none" }} onClick={() => invSort.toggleSort("stock")}>
+                  Stock{sortArrow("stock")}
+                </th>
                 <th style={thStyle}></th>
               </tr>
             </thead>
@@ -396,7 +415,7 @@ function App() {
                   </td>
                 </tr>
               )}
-              {visibleInventory.map((item: any) => (
+              {sortedInventory.map((item: any) => (
                 <tr
                   key={item.id}
                   style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", transition: "background 0.1s" }}
@@ -458,7 +477,7 @@ function App() {
             </div>
           )}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "16px" }}>
-            {visibleInventory.map((item: any) => (
+            {sortedInventory.map((item: any) => (
               <div
                 key={item.id}
                 onClick={() => setSelectedProduct(item)}

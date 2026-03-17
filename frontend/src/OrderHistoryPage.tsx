@@ -8,6 +8,7 @@ import { join } from "@tauri-apps/api/path"
 import { writeFile } from "@tauri-apps/plugin-fs"
 import { resolveExportDir } from "./exportService"
 import { useToast } from "./Toast"
+import { useSortableTable } from "./useSortableTable"
 
 function formatDate(dateStr: string) {
   if (!dateStr) return "—"
@@ -380,6 +381,13 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
     return true
   })
 
+  const orderSort = useSortableTable<any, "fecha" | "recibido">(visibleOrders as any[], "fecha")
+  const sortedOrders = orderSort.sorted
+  function orderArrow(key: any) {
+    if (orderSort.sortKey !== key) return ""
+    return orderSort.sortDir === "asc" ? " ▲" : " ▼"
+  }
+
   const pendingCount = orders.filter(o => !o.recibido).length
 
   const grouped = agruparItems(orderDetail)
@@ -447,6 +455,54 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
             ))}
           </div>
 
+          {/* CABECERAS ORDENACIÓN */}
+          <div style={{
+            display: "flex",
+            gap: "10px",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "10px",
+            padding: "10px 12px",
+            backgroundColor: "#fff",
+            border: "1px solid #e0e0e0",
+            borderRadius: "10px",
+          }}>
+            <button
+              onClick={() => orderSort.toggleSort("fecha")}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#555",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}
+              title="Ordenar por fecha"
+            >
+              Fecha{orderArrow("fecha")}
+            </button>
+            <button
+              onClick={() => orderSort.toggleSort("recibido")}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#555",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}
+              title="Ordenar por estado"
+            >
+              Estado{orderArrow("recibido")}
+            </button>
+          </div>
+
           <div style={{ backgroundColor: "#fff", border: "1px solid #e0e0e0", borderRadius: "10px", overflow: "hidden" }}>
             {loading ? (
               <div style={{ padding: "40px", textAlign: "center", color: "#aaa" }}>Cargando...</div>
@@ -455,7 +511,7 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
                 No hay pedidos{filter !== "all" ? " en esta categoría" : ""}
               </div>
             ) : (
-              visibleOrders.map(order => (
+              sortedOrders.map(order => (
                 <div
                   key={order.id}
                   onClick={() => openOrder(order)}
