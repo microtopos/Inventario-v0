@@ -7,6 +7,7 @@ import { jsPDF } from "jspdf"
 import { join } from "@tauri-apps/api/path"
 import { writeFile } from "@tauri-apps/plugin-fs"
 import { resolveExportDir } from "./exportService"
+import { useToast } from "./Toast"
 
 function formatDate(dateStr: string) {
   if (!dateStr) return "—"
@@ -45,7 +46,8 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
   const [receiving, setReceiving] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [filter, setFilter] = useState<"all" | "pending" | "received">("all")
-  const { confirm, alert, dialog } = useConfirm()
+  const { confirm, dialog } = useConfirm()
+  const toast = useToast()
 
   // Barrera síncrona: evita doble-clic antes de que receiving (async) se actualice
   const receivingRef = useRef(false)
@@ -99,6 +101,7 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
         setOrderDetail(detail)
         setSelectedOrder((prev: any) => ({ ...prev, recibido: 1 }))
       }
+      toast.success("Pedido recibido", `Pedido #${selectedOrder.id} marcado como recibido`)
     } finally {
       receivingRef.current = false
       if (mountedRef.current) setReceiving(false)
@@ -118,12 +121,18 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
       { confirmLabel: "Eliminar", danger: true }
     )
     if (!ok) return
-    await deleteOrder(order.id)
-    if (selectedOrder?.id === order.id) {
-      setSelectedOrder(null)
-      setOrderDetail([])
+    try {
+      await deleteOrder(order.id)
+      if (selectedOrder?.id === order.id) {
+        setSelectedOrder(null)
+        setOrderDetail([])
+      }
+      await loadOrders()
+      toast.success("Pedido eliminado", `Pedido #${order.id} eliminado`)
+    } catch (e: any) {
+      console.error("Error eliminando pedido:", e)
+      toast.error("No se pudo eliminar el pedido", e?.message ?? String(e))
     }
-    await loadOrders()
   }
 
   async function exportOrderPDF() {
@@ -355,11 +364,11 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
       const base = await resolveExportDir()
       const filePath = await join(base, `pedido_${selectedOrder.id}_${new Date().toISOString().slice(0, 10)}.pdf`)
       await writeFile(filePath.replace(/\\/g, "/"), pdfBytes)
-      await alert(`PDF guardado en:\n${filePath}`, { confirmLabel: "Aceptar" })
+      toast.success("PDF guardado", filePath)
     } catch (e: any) {
       if (e?.message !== "Selección cancelada") {
         console.error("Error exportando PDF:", e)
-        await alert(e?.message ?? "Error al exportar el PDF", { confirmLabel: "Aceptar" })
+        toast.error("Error al exportar el PDF", e?.message ?? String(e))
       }
     }
     setExporting(false)

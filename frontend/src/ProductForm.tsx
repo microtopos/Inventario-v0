@@ -1,9 +1,9 @@
 import { useState } from "react"
 import { getDB } from "./db"
-import { useConfirm } from "./ConfirmDialog"
 import ColorSelect from "./ColorSelect"
 import DepartmentSelect from "./DepartmentSelect"
 import AppHeader from "./AppHeader"
+import { useToast } from "./Toast"
 
 export default function ProductForm({ onClose, onSaved, onNavigate }: any) {
   const [nombre, setNombre] = useState("")
@@ -12,11 +12,11 @@ export default function ProductForm({ onClose, onSaved, onNavigate }: any) {
   const [nuevaTalla, setNuevaTalla] = useState("")
   const [color, setColor] = useState("")
   const [departamento, setDepartamento] = useState<number | null>(null)
-  const { alert, dialog } = useConfirm()
+  const toast = useToast()
 
   async function save() {
     if (!nombre) {
-      await alert("Introduce un nombre para la prenda")
+      toast.error("Falta el nombre", "Introduce un nombre para la prenda")
       return
     }
     const db = await getDB()
@@ -33,7 +33,7 @@ export default function ProductForm({ onClose, onSaved, onNavigate }: any) {
       )
     }
     onSaved()
-    await alert(`"${nombre}" añadida al inventario`, { confirmLabel: "Aceptar" })
+    toast.success("Prenda guardada", `"${nombre}" añadida al inventario`)
     onClose()
   }
 
@@ -159,7 +159,6 @@ export default function ProductForm({ onClose, onSaved, onNavigate }: any) {
 
         </div>
       </main>
-      {dialog}
     </div>
   )
 }

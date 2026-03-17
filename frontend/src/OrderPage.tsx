@@ -9,6 +9,7 @@ import { useConfirm } from "./ConfirmDialog"
 import { ordenarTallas } from "./sortTallas"
 import { resolveExportDir } from "./exportService"
 import { backupDBSilent } from "./backupService"
+import { useToast } from "./Toast"
 
 type SyncState = "idle" | "saving" | "saved" | "error"
 
@@ -28,6 +29,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { confirm, alert, dialog } = useConfirm()
+  const toast = useToast()
 
   // Cierra el dropdown al hacer clic fuera
   useEffect(() => {
@@ -151,7 +153,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
     setDropdownOpen(false)
     try {
       if (totalPedido() === 0) {
-        await alert("El pedido está vacío", { confirmLabel: "Aceptar" })
+        toast.info("Pedido vacío", "Añade al menos una prenda antes de confirmar.")
         return
       }
       setSyncState("saving")
@@ -163,7 +165,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
       setDraftId(null)
       setSyncState("idle")
 
-      await alert(`Pedido #${confirmedId} confirmado. Puedes verlo en el historial de pedidos.`, { confirmLabel: "Aceptar" })
+      toast.success("Pedido confirmado", `Pedido #${confirmedId} guardado en el historial.`)
       // Backup silencioso (si hay carpeta configurada)
       backupDBSilent().catch(() => {})
       setPedido({})
@@ -420,7 +422,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
       setDraftId(null)
       setSyncState("idle")
 
-      await alert(`PDF guardado en:\n${filePath}`, { confirmLabel: "Aceptar" })
+      toast.success("PDF guardado", filePath)
       // Backup silencioso (si hay carpeta configurada)
       backupDBSilent().catch(() => {})
       setPedido({})

@@ -20,6 +20,7 @@ import {
 } from "./exportService"
 import { getBackupDir, getExportDir, getStockThresholds, setStockThresholds, type StockThresholds } from "./settingsService"
 import { backupDB, changeBackupDir } from "./backupService"
+import { useToast } from "./Toast"
 
 // Miniatura para la tabla
 function ImageCell({ imageUrl }: { imageUrl: string }) {
@@ -78,7 +79,8 @@ function App() {
   const [stockThresholds, setStockThresholdsState] = useState<StockThresholds>({ red: 2, orange: 5 })
   const [thresholdInputs, setThresholdInputs] = useState({ red: "2", orange: "5" })
   const exportRef = useRef<HTMLDivElement>(null)
-  const { confirm, alert, dialog } = useConfirm()
+  const { confirm, dialog } = useConfirm()
+  const toast = useToast()
 
   // Carga la carpeta de exportación guardada al arrancar
   useEffect(() => {
@@ -338,7 +340,13 @@ function App() {
                           onClick={async () => {
                             setExportOpen(false)
                             setExporting(true)
-                            try { await btn.fn() } catch (e) { console.error(e) }
+                            try {
+                              await btn.fn()
+                              toast.success("Exportación completada", `${item.label} — ${btn.fmt}`)
+                            } catch (e: any) {
+                              console.error(e)
+                              toast.error("Error al exportar", e?.message ?? String(e))
+                            }
                             setExporting(false)
                           }}
                           style={{
@@ -419,8 +427,14 @@ function App() {
                       onClick={async () => {
                         const ok = await confirm(`¿Eliminar "${item.nombre}"?`, { confirmLabel: "Eliminar", danger: true })
                         if (!ok) return
-                        await deleteProduct(item.id)
-                        await loadInventory()
+                        try {
+                          await deleteProduct(item.id)
+                          await loadInventory()
+                          toast.success("Prenda eliminada", `"${item.nombre}" se eliminó del inventario`)
+                        } catch (e: any) {
+                          console.error(e)
+                          toast.error("No se pudo eliminar", e?.message ?? String(e))
+                        }
                       }}
                       style={{ background: "none", border: "1px solid #fca5a5", color: "#dc2626", borderRadius: "6px", padding: "5px 12px", fontSize: "13px", cursor: "pointer" }}
                     >
@@ -489,8 +503,14 @@ function App() {
                         e.stopPropagation()
                         const ok = await confirm(`¿Eliminar "${item.nombre}"?`, { confirmLabel: "Eliminar", danger: true })
                         if (!ok) return
-                        await deleteProduct(item.id)
-                        await loadInventory()
+                        try {
+                          await deleteProduct(item.id)
+                          await loadInventory()
+                          toast.success("Prenda eliminada", `"${item.nombre}" se eliminó del inventario`)
+                        } catch (err: any) {
+                          console.error(err)
+                          toast.error("No se pudo eliminar", err?.message ?? String(err))
+                        }
                       }}
                       style={{ background: "none", border: "none", color: "#dc2626", fontSize: "16px", cursor: "pointer", padding: "2px 4px", lineHeight: 1 }}
                       title="Eliminar"
@@ -584,10 +604,10 @@ function App() {
                       try {
                         const savedPath = await backupDB()
                         await getBackupDir().then(setBackupDirState)
-                        await alert("Copia de seguridad creada", { detail: savedPath, confirmLabel: "Aceptar" })
+                        toast.success("Copia de seguridad creada", savedPath)
                       } catch (e: any) {
                         if (e?.message !== "Selección cancelada") {
-                          await alert("No se pudo crear la copia de seguridad", { detail: e?.message ?? String(e), confirmLabel: "Aceptar" })
+                          toast.error("No se pudo crear la copia de seguridad", e?.message ?? String(e))
                         }
                       } finally {
                         setBackingUp(false)
