@@ -266,9 +266,10 @@ function App() {
                 ...btnStyle,
                 borderRadius: 0,
                 border: "none",
-                backgroundColor: viewMode === "table" ? "#111" : "#fff",
-                color: viewMode === "table" ? "#fff" : "#888",
+                backgroundColor: viewMode === "table" ? "#eff6ff" : "#fff",
+                color: viewMode === "table" ? "#2563eb" : "#888",
                 padding: "8px 12px",
+                fontWeight: viewMode === "table" ? 700 : 400,
               }}
             >
               ☰
@@ -281,9 +282,10 @@ function App() {
                 borderRadius: 0,
                 border: "none",
                 borderLeft: "1px solid #ddd",
-                backgroundColor: viewMode === "grid" ? "#111" : "#fff",
-                color: viewMode === "grid" ? "#fff" : "#888",
+                backgroundColor: viewMode === "grid" ? "#eff6ff" : "#fff",
+                color: viewMode === "grid" ? "#2563eb" : "#888",
                 padding: "8px 12px",
+                fontWeight: viewMode === "grid" ? 700 : 400,
               }}
             >
               ⊞

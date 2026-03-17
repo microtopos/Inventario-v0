@@ -40,13 +40,12 @@ export default function AppHeader({ page, onNavigate, onBack, title, actions }: 
         {onBack && (
           <div style={{ display: "flex", alignItems: "center", marginLeft: "12px" }}>
             <span style={{ color: "#ddd", fontSize: "20px", fontWeight: 300, margin: "0 8px" }}>/</span>
-            {/* Clic en la sección vuelve atrás */}
             <button
               onClick={onBack}
               style={{
                 background: "none", border: "none", padding: "4px 8px",
-                fontSize: "14px", color: "#888", cursor: "pointer",
-                borderRadius: "5px", fontWeight: 500,
+                fontSize: "13px", color: "#aaa", cursor: "pointer",
+                borderRadius: "5px", fontWeight: 400,
               }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#f5f5f5")}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = "")}
@@ -62,7 +61,7 @@ export default function AppHeader({ page, onNavigate, onBack, title, actions }: 
             {title && (
               <>
                 <span style={{ color: "#ddd", fontSize: "20px", fontWeight: 300, margin: "0 8px" }}>/</span>
-                <span style={{ fontSize: "14px", fontWeight: 600, color: "#111" }}>
+                <span style={{ fontSize: "13px", fontWeight: 500, color: "#111" }}>
                   {title}
                 </span>
               </>
@@ -72,29 +71,48 @@ export default function AppHeader({ page, onNavigate, onBack, title, actions }: 
       </div>
 
       {/* LADO DERECHO: acciones opcionales + tabs (siempre visibles) */}
-      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
         {actions}
         {([
-          { key: "inventory", label: "📦 Inventario" },
-          { key: "dashboard", label: "📊 Estadísticas" },
-          { key: "orders",    label: "🛒 Pedidos" },
+          { key: "inventory",    label: "📦 Inventario" },
+          { key: "dashboard",    label: "📊 Estadísticas" },
+          { key: "orders",       label: "🛒 Pedidos" },
           { key: "orderHistory", label: "📋 Historial" },
         ] as { key: Page; label: string }[]).map(({ key, label }) => (
           <button
             key={key}
             onClick={() => onNavigate(key)}
             style={{
-              padding: "8px 16px",
+              position: "relative",
+              padding: "8px 14px",
               borderRadius: "6px",
               border: "none",
-              backgroundColor: page === key ? "#111" : "transparent",
-              color: page === key ? "#fff" : "#555",
-              fontWeight: 500,
+              backgroundColor: "transparent",
+              color: page === key ? "#2563eb" : "#666",
+              fontWeight: page === key ? 600 : 500,
               fontSize: "14px",
               cursor: "pointer",
+              transition: "color 0.15s, background-color 0.15s",
+            }}
+            onMouseEnter={e => {
+              if (page !== key) e.currentTarget.style.backgroundColor = "#f5f7ff"
+            }}
+            onMouseLeave={e => {
+              if (page !== key) e.currentTarget.style.backgroundColor = "transparent"
             }}
           >
             {label}
+            {page === key && (
+              <span style={{
+                position: "absolute",
+                bottom: "2px",
+                left: "14px",
+                right: "14px",
+                height: "2px",
+                backgroundColor: "#2563eb",
+                borderRadius: "2px",
+              }} />
+            )}
           </button>
         ))}
       </div>
