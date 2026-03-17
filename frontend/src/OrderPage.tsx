@@ -8,6 +8,7 @@ import AppHeader from "./AppHeader"
 import { useConfirm } from "./ConfirmDialog"
 import { ordenarTallas } from "./sortTallas"
 import { resolveExportDir } from "./exportService"
+import { backupDBSilent } from "./backupService"
 
 type SyncState = "idle" | "saving" | "saved" | "error"
 
@@ -16,6 +17,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
   const [search, setSearch] = useState("")
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [pedido, setPedido] = useState<Record<number, number>>({})
+  const [notas, setNotas] = useState("")
   const [, setDraftId] = useState<number | null>(null)
   // true una vez que la carga inicial desde DB ha terminado
   const [ready, setReady] = useState(false)
@@ -50,6 +52,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
         setDraftId(draft.id)
         draftIdRef.current = draft.id
         setPedido(draft.items)
+        setNotas(draft.notas ?? "")
       }
       setReady(true)
     }
@@ -66,7 +69,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
 
     syncTimer.current = setTimeout(async () => {
       try {
-        const newId = await syncDraft(draftIdRef.current, pedido)
+        const newId = await syncDraft(draftIdRef.current, pedido, notas)
         draftIdRef.current = newId
         setDraftId(newId)
         setSyncState(newId !== null ? "saved" : "idle")
@@ -79,7 +82,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
     return () => {
       if (syncTimer.current) clearTimeout(syncTimer.current)
     }
-  }, [pedido, ready])
+  }, [pedido, notas, ready])
 
   // ── Helpers de estado ────────────────────────────────────────────────────────
 
@@ -125,6 +128,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
       setDraftId(null)
     }
     setPedido({})
+    setNotas("")
     setSelectedProduct(null)
     setSyncState("idle")
   }
@@ -135,7 +139,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
       clearTimeout(syncTimer.current)
       syncTimer.current = null
     }
-    const newId = await syncDraft(draftIdRef.current, pedido)
+    const newId = await syncDraft(draftIdRef.current, pedido, notas)
     draftIdRef.current = newId
     setDraftId(newId)
     return newId
@@ -154,13 +158,16 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
       const id = await flushSync()
       if (id === null) throw new Error("No se pudo crear el borrador")
 
-      const confirmedId = await confirmDraft(id)
+      const confirmedId = await confirmDraft(id, notas)
       draftIdRef.current = null
       setDraftId(null)
       setSyncState("idle")
 
       await alert(`Pedido #${confirmedId} confirmado. Puedes verlo en el historial de pedidos.`, { confirmLabel: "Aceptar" })
+      // Backup silencioso (si hay carpeta configurada)
+      backupDBSilent().catch(() => {})
       setPedido({})
+      setNotas("")
       setSelectedProduct(null)
     } catch (e: any) {
       setSyncState("error")
@@ -252,6 +259,46 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
 
       drawHeader()
       let y = 35
+
+      // Bloque de notas (opcional)
+      const notasText = (notas ?? "").trim()
+      if (notasText) {
+        const labelH = 4
+        const lineH = 4.1
+        const boxPadY = 3
+        const boxPadX = 3
+        const maxWidth = CW - boxPadX * 2
+
+        doc.setFont("helvetica", "bold")
+        doc.setFontSize(7.5)
+        doc.setTextColor(...gris)
+        doc.text("NOTAS", ML + 2, y + 3.5)
+
+        doc.setFont("helvetica", "normal")
+        doc.setFontSize(8.5)
+        doc.setTextColor(...negro)
+        const lines = doc.splitTextToSize(notasText, maxWidth) as string[]
+
+        const boxH = labelH + boxPadY + lines.length * lineH + 4
+        y = checkPageBreak(y, boxH + 4)
+
+        doc.setDrawColor(...linea)
+        doc.setLineWidth(0.3)
+        doc.rect(ML, y, CW, boxH, "S")
+
+        // Texto dentro del recuadro
+        doc.setFont("helvetica", "bold")
+        doc.setFontSize(7.5)
+        doc.setTextColor(...gris)
+        doc.text("NOTAS", ML + boxPadX, y + 6)
+
+        doc.setFont("helvetica", "normal")
+        doc.setFontSize(8.5)
+        doc.setTextColor(...negro)
+        doc.text(lines, ML + boxPadX, y + 11)
+
+        y += boxH + 8
+      }
 
       // Cabecera tabla
       doc.setFillColor(...fondoCab)
@@ -368,13 +415,16 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
       await writeFile(filePath.replace(/\\/g, "/"), pdfBytes)
 
       // 3. Solo confirmar el borrador si el fichero se guardó con éxito
-      await confirmDraft(id)
+      await confirmDraft(id, notas)
       draftIdRef.current = null
       setDraftId(null)
       setSyncState("idle")
 
       await alert(`PDF guardado en:\n${filePath}`, { confirmLabel: "Aceptar" })
+      // Backup silencioso (si hay carpeta configurada)
+      backupDBSilent().catch(() => {})
       setPedido({})
+      setNotas("")
       setSelectedProduct(null)
     } catch (e: any) {
       if (e?.message === "Selección cancelada") {
@@ -632,6 +682,31 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
               backgroundColor: "#fff", border: "1px solid #e0e0e0", borderRadius: "8px",
               maxHeight: "520px", overflowY: "auto",
             }}>
+              {/* NOTAS */}
+              <div style={{ padding: "14px 16px", borderBottom: "1px solid #f0f0f0" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+                  Notas
+                </div>
+                <textarea
+                  value={notas}
+                  onChange={e => setNotas(e.target.value)}
+                  placeholder="Proveedor, albarán, condiciones de entrega…"
+                  rows={4}
+                  style={{
+                    width: "100%",
+                    resize: "vertical",
+                    padding: "9px 12px",
+                    borderRadius: "7px",
+                    border: "1px solid #ddd",
+                    fontSize: "13px",
+                    boxSizing: "border-box",
+                    outline: "none",
+                  }}
+                />
+                <div style={{ fontSize: "11px", color: "#aaa", marginTop: "6px" }}>
+                  Se guardan con el borrador y quedan visibles en el historial.
+                </div>
+              </div>
               {items.length === 0 ? (
                 <div style={{ padding: "40px 20px", textAlign: "center", color: "#aaa", fontSize: "14px" }}>
                   Sin productos en el pedido

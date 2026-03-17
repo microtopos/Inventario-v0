@@ -10,6 +10,7 @@ export async function getOrders() {
       p.id,
       p.fecha,
       p.recibido,
+      p.notas,
       COUNT(pi.id) as num_lineas,
       SUM(pi.cantidad) as total_unidades
     FROM pedidos p
@@ -74,14 +75,15 @@ export async function deleteOrder(orderId: number) {
 // entre sesiones hasta que se confirma o descarta explícitamente.
 
 /** Carga el borrador activo. Devuelve { id, items } o null si no existe. */
-export async function loadDraft(): Promise<{ id: number; items: Record<number, number> } | null> {
+export async function loadDraft(): Promise<{ id: number; items: Record<number, number>; notas: string } | null> {
   const db = await getDB()
   const rows: any = await db.select(
-    "SELECT id FROM pedidos WHERE borrador = 1 ORDER BY id DESC LIMIT 1"
+    "SELECT id, notas FROM pedidos WHERE borrador = 1 ORDER BY id DESC LIMIT 1"
   )
   if (!rows || rows.length === 0) return null
 
   const draftId: number = rows[0].id
+  const notas: string = (rows[0].notas ?? "") as string
   const itemRows: any = await db.select(
     "SELECT talla_id, cantidad FROM pedido_items WHERE pedido_id = ?",
     [draftId]
@@ -92,7 +94,7 @@ export async function loadDraft(): Promise<{ id: number; items: Record<number, n
     items[Number(r.talla_id)] = Number(r.cantidad)
   }
 
-  return { id: draftId, items }
+  return { id: draftId, items, notas }
 }
 
 /**
@@ -103,7 +105,8 @@ export async function loadDraft(): Promise<{ id: number; items: Record<number, n
  */
 export async function syncDraft(
   draftId: number | null,
-  items: Record<number, number>
+  items: Record<number, number>,
+  notas: string
 ): Promise<number | null> {
   const db = await getDB()
 
@@ -119,10 +122,12 @@ export async function syncDraft(
 
   let id = draftId
   if (id === null) {
-    await db.execute("INSERT INTO pedidos (borrador) VALUES (1)")
+    await db.execute("INSERT INTO pedidos (borrador, notas) VALUES (1, ?)", [notas || null])
     const row: any = await db.select("SELECT last_insert_rowid() as id")
     id = row[0].id as number
   }
+  // Mantén las notas sincronizadas con el borrador
+  await db.execute("UPDATE pedidos SET notas = ? WHERE id = ?", [notas || null, id])
 
   // Reemplaza todos los items del borrador
   await db.execute("DELETE FROM pedido_items WHERE pedido_id = ?", [id])
@@ -147,7 +152,7 @@ export async function discardDraft(draftId: number): Promise<void> {
  * Convierte el borrador en un pedido real (borrador = 0, recibido = 0).
  * Devuelve el id del pedido confirmado.
  */
-export async function confirmDraft(draftId: number): Promise<number> {
+export async function confirmDraft(draftId: number, notas?: string): Promise<number> {
   const db = await getDB()
 
   const check: any = await db.select(
@@ -156,6 +161,9 @@ export async function confirmDraft(draftId: number): Promise<number> {
   )
   if (!check[0] || check[0].total === 0) throw new Error("El pedido está vacío")
 
+  if (notas !== undefined) {
+    await db.execute("UPDATE pedidos SET notas = ? WHERE id = ?", [notas || null, draftId])
+  }
   await db.execute(
     "UPDATE pedidos SET borrador = 0, recibido = 0 WHERE id = ?",
     [draftId]

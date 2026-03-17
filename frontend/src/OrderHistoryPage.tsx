@@ -208,6 +208,39 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
       drawHeader()
       let y = 35
 
+      // Bloque de notas (opcional)
+      const notasText = String(selectedOrder.notas ?? "").trim()
+      if (notasText) {
+        const labelH = 4
+        const lineH = 4.1
+        const boxPadY = 3
+        const boxPadX = 3
+        const maxWidth = CW - boxPadX * 2
+
+        doc.setFont("helvetica", "normal")
+        doc.setFontSize(8.5)
+        const lines = doc.splitTextToSize(notasText, maxWidth) as string[]
+
+        const boxH = labelH + boxPadY + lines.length * lineH + 4
+        y = checkPageBreak(y, boxH + 4)
+
+        doc.setDrawColor(...linea)
+        doc.setLineWidth(0.3)
+        doc.rect(ML, y, CW, boxH, "S")
+
+        doc.setFont("helvetica", "bold")
+        doc.setFontSize(7.5)
+        doc.setTextColor(...gris)
+        doc.text("NOTAS", ML + boxPadX, y + 6)
+
+        doc.setFont("helvetica", "normal")
+        doc.setFontSize(8.5)
+        doc.setTextColor(...negro)
+        doc.text(lines, ML + boxPadX, y + 11)
+
+        y += boxH + 8
+      }
+
       // Cabecera tabla
       doc.setFillColor(...fondoCab)
       doc.rect(ML, y, CW, 7, "F")
@@ -491,6 +524,26 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
                   <div style={{ fontSize: "13px", color: "#888", marginTop: "3px" }}>
                     Creado el {formatDate(selectedOrder.fecha)}
                   </div>
+                  {!!selectedOrder.notas && (
+                    <div style={{ marginTop: "10px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                        Notas
+                      </div>
+                      <div style={{
+                        fontSize: "13px",
+                        color: "#444",
+                        backgroundColor: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        padding: "10px 12px",
+                        maxWidth: "520px",
+                        whiteSpace: "pre-wrap",
+                        lineHeight: 1.35,
+                      }}>
+                        {selectedOrder.notas}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                   <button

@@ -1,6 +1,7 @@
 use tauri_plugin_sql::{Builder, Migration, MigrationKind};
 use tauri::Manager;
 use std::fs;
+use std::path::PathBuf;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[tauri::command]
@@ -11,7 +12,6 @@ fn save_product_image(
 ) -> Result<(), String> {
 
     use image::ImageReader;
-    use image::imageops::FilterType;
     use std::io::Cursor;
 
     let app_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
@@ -48,7 +48,6 @@ fn save_product_image_from_path(
 ) -> Result<(), String> {
 
     use image::ImageReader;
-    use image::imageops::FilterType;
 
     let app_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let images_dir = app_dir.join("images");
@@ -103,9 +102,37 @@ fn delete_product_image(app: tauri::AppHandle, product_id: i64) -> Result<(), St
     Ok(())
 }
 
+#[tauri::command]
+fn backup_database(app: tauri::AppHandle, dest_path: String) -> Result<String, String> {
+    use chrono::Local;
+
+    let app_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let src_db = app_dir.join("inventario.db");
+    if !src_db.exists() {
+        return Err("No se encontró inventario.db".to_string());
+    }
+
+    let dest_dir = PathBuf::from(dest_path);
+    if !dest_dir.exists() {
+        fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
+    }
+
+    let date = Local::now().format("%Y-%m-%d").to_string();
+    let mut dest_file = dest_dir.join(format!("inventario_{}.db", date));
+
+    // Evita sobrescribir si ya existe: añade sufijo HHMMSS
+    if dest_file.exists() {
+        let time = Local::now().format("%H%M%S").to_string();
+        dest_file = dest_dir.join(format!("inventario_{}_{}.db", date, time));
+    }
+
+    fs::copy(&src_db, &dest_file).map_err(|e| e.to_string())?;
+    Ok(dest_file.to_string_lossy().to_string())
+}
+
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![save_product_image, save_product_image_from_path, read_product_image, delete_product_image])
+        .invoke_handler(tauri::generate_handler![save_product_image, save_product_image_from_path, read_product_image, delete_product_image, backup_database])
         .plugin(
             Builder::default()
                 .add_migrations(
@@ -179,6 +206,14 @@ pub fn run() {
                             description: "columna borrador en pedidos",
                             sql: "
                                 ALTER TABLE pedidos ADD COLUMN borrador INTEGER NOT NULL DEFAULT 0;
+                            ",
+                            kind: MigrationKind::Up,
+                        },
+                        Migration {
+                            version: 3,
+                            description: "notas en pedidos",
+                            sql: "
+                                ALTER TABLE pedidos ADD COLUMN notas TEXT;
                             ",
                             kind: MigrationKind::Up,
                         },

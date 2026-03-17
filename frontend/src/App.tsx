@@ -18,7 +18,8 @@ import {
   exportMovimientosPDF, exportMovimientosXLSX,
   changeExportDir,
 } from "./exportService"
-import { getExportDir, getStockThresholds, setStockThresholds, type StockThresholds } from "./settingsService"
+import { getBackupDir, getExportDir, getStockThresholds, setStockThresholds, type StockThresholds } from "./settingsService"
+import { backupDB, changeBackupDir } from "./backupService"
 
 // Miniatura para la tabla
 function ImageCell({ imageUrl }: { imageUrl: string }) {
@@ -72,14 +73,17 @@ function App() {
   const [exporting, setExporting] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [exportDir, setExportDirState] = useState<string | null>(null)
+  const [backupDir, setBackupDirState] = useState<string | null>(null)
+  const [backingUp, setBackingUp] = useState(false)
   const [stockThresholds, setStockThresholdsState] = useState<StockThresholds>({ red: 2, orange: 5 })
   const [thresholdInputs, setThresholdInputs] = useState({ red: "2", orange: "5" })
   const exportRef = useRef<HTMLDivElement>(null)
-  const { confirm, dialog } = useConfirm()
+  const { confirm, alert, dialog } = useConfirm()
 
   // Carga la carpeta de exportación guardada al arrancar
   useEffect(() => {
     getExportDir().then(setExportDirState)
+    getBackupDir().then(setBackupDirState)
     getStockThresholds().then(t => {
       setStockThresholdsState(t)
       setThresholdInputs({ red: String(t.red), orange: String(t.orange) })
@@ -546,6 +550,65 @@ function App() {
                 </div>
                 <div style={{ fontSize: "12px", color: "#aaa", marginTop: "6px" }}>
                   Los exports se guardan directamente en esta carpeta.
+                </div>
+              </div>
+
+              {/* BACKUP AUTOMÁTICO */}
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+                  Copias de seguridad
+                </div>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                  <div style={{
+                    flex: 1, padding: "9px 12px", borderRadius: "7px", border: "1px solid #e0e0e0",
+                    fontSize: "13px", color: backupDir ? "#333" : "#aaa", fontFamily: backupDir ? "monospace" : "inherit",
+                    backgroundColor: "#fafafa", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  }}>
+                    {backupDir ?? "No configurada — se pedirá al crear una copia"}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const dir = await changeBackupDir()
+                      if (dir) setBackupDirState(dir)
+                    }}
+                    style={{ padding: "9px 16px", borderRadius: "7px", border: "1px solid #ddd", backgroundColor: "#fff", fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap", fontWeight: 500 }}
+                  >
+                    Cambiar…
+                  </button>
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
+                  <button
+                    onClick={async () => {
+                      if (backingUp) return
+                      setBackingUp(true)
+                      try {
+                        const savedPath = await backupDB()
+                        await getBackupDir().then(setBackupDirState)
+                        await alert("Copia de seguridad creada", { detail: savedPath, confirmLabel: "Aceptar" })
+                      } catch (e: any) {
+                        if (e?.message !== "Selección cancelada") {
+                          await alert("No se pudo crear la copia de seguridad", { detail: e?.message ?? String(e), confirmLabel: "Aceptar" })
+                        }
+                      } finally {
+                        setBackingUp(false)
+                      }
+                    }}
+                    style={{
+                      padding: "9px 16px",
+                      borderRadius: "7px",
+                      border: "none",
+                      backgroundColor: backingUp ? "#ccc" : "#111",
+                      color: "#fff",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      cursor: backingUp ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {backingUp ? "Creando copia…" : "Crear copia de seguridad"}
+                  </button>
+                </div>
+                <div style={{ fontSize: "12px", color: "#aaa", marginTop: "6px" }}>
+                  Copia `inventario.db` con fecha (ej: inventario_2026-03-17.db).
                 </div>
               </div>
 

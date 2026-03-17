@@ -9,7 +9,12 @@
     "sql:allow-execute",
     "sql:allow-select",
     "fs:default",
-    "fs:allow-write-file",
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [
+        { "path": "$DESKTOP/**" }
+      ]
+    },
     "fs:allow-read-file",
     "fs:allow-exists",
     "fs:allow-mkdir",

@@ -42,6 +42,14 @@ export async function setExportDir(dir: string): Promise<void> {
   return setSetting("exportDir", dir)
 }
 
+export async function getBackupDir(): Promise<string | null> {
+  return getSetting("backupDir")
+}
+
+export async function setBackupDir(dir: string): Promise<void> {
+  return setSetting("backupDir", dir)
+}
+
 export interface StockThresholds {
   red: number    // stock <= red  → rojo (crítico)
   orange: number // stock <= orange → naranja (aviso)
