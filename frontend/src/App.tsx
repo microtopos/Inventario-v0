@@ -75,6 +75,7 @@ function App() {
   const [exportOpen, setExportOpen] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const [exportDir, setExportDirState] = useState<string | null>(null)
   const [backupDir, setBackupDirState] = useState<string | null>(null)
   const [backingUp, setBackingUp] = useState(false)
@@ -205,15 +206,26 @@ function App() {
         onNavigate={setPage as any}
         draftCount={draftCount}
         actions={
-          <button
-            onClick={() => setShowSettings(true)}
-            title="Ajustes"
-            style={{ background: "none", border: "1px solid #e0e0e0", borderRadius: "6px", padding: "6px 10px", fontSize: "16px", cursor: "pointer", color: "#888", lineHeight: 1 }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = "#aaa")}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = "#e0e0e0")}
-          >
-            ⚙
-          </button>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              onClick={() => setShowHelp(true)}
+              title="Ayuda"
+              style={{ background: "none", border: "1px solid #e0e0e0", borderRadius: "6px", padding: "6px 10px", fontSize: "16px", cursor: "pointer", color: "#888", lineHeight: 1 }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "#aaa")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = "#e0e0e0")}
+            >
+              ?
+            </button>
+            <button
+              onClick={() => setShowSettings(true)}
+              title="Ajustes"
+              style={{ background: "none", border: "1px solid #e0e0e0", borderRadius: "6px", padding: "6px 10px", fontSize: "16px", cursor: "pointer", color: "#888", lineHeight: 1 }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "#aaa")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = "#e0e0e0")}
+            >
+              ⚙
+            </button>
+          </div>
         }
       />
 
@@ -609,7 +621,7 @@ function App() {
                     fontSize: "13px", color: backupDir ? "#333" : "#aaa", fontFamily: backupDir ? "monospace" : "inherit",
                     backgroundColor: "#fafafa", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                   }}>
-                    {backupDir ?? "No configurada — se pedirá al crear una copia"}
+                    {backupDir ?? "Por defecto: carpeta backups/ dentro de los datos de la app"}
                   </div>
                   <button
                     onClick={async () => {
@@ -653,7 +665,7 @@ function App() {
                   </button>
                 </div>
                 <div style={{ fontSize: "12px", color: "#aaa", marginTop: "6px" }}>
-                  Copia `inventario.db` con fecha (ej: inventario_2026-03-17.db).
+                  Se guarda como <code>inventario_YYYY-MM-DD.db</code> en la carpeta configurada. Usa "?" para ver cómo recuperar una copia.
                 </div>
               </div>
 
@@ -737,6 +749,81 @@ function App() {
         </div>
       )}
 
+      {/* MODAL DE AYUDA */}
+      {showHelp && (
+        <div
+          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200 }}
+          onClick={() => setShowHelp(false)}
+        >
+          <div
+            style={{ backgroundColor: "#fff", borderRadius: "14px", width: "560px", maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ height: "4px", backgroundColor: "#2563eb" }} />
+            <div style={{ padding: "28px 28px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h2 style={{ fontSize: "16px", fontWeight: 700, margin: 0 }}>? Ayuda — Copias de seguridad</h2>
+              <button
+                onClick={() => setShowHelp(false)}
+                style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#aaa", lineHeight: 1 }}
+              >✕</button>
+            </div>
+
+            <div style={{ padding: "24px 28px 28px", overflowY: "auto" }}>
+
+              {/* BLOQUE: cómo funciona */}
+              <section style={{ marginBottom: "24px" }}>
+                <div style={helpSectionTitle}>¿Qué es una copia de seguridad?</div>
+                <p style={helpText}>
+                  La aplicación guarda todos los datos (inventario, pedidos, movimientos…) en un único archivo llamado <code style={helpCode}>inventario.db</code>, ubicado en la carpeta de datos de la app. Una copia de seguridad es simplemente ese mismo archivo duplicado con la fecha en el nombre, por ejemplo <code style={helpCode}>inventario_2026-03-19.db</code>.
+                </p>
+              </section>
+
+              {/* BLOQUE: cuándo se crea */}
+              <section style={{ marginBottom: "24px" }}>
+                <div style={helpSectionTitle}>¿Cuándo se crean las copias?</div>
+                <p style={helpText}>Las copias se crean en dos momentos:</p>
+                <ul style={helpList}>
+                  <li><b>Automáticamente</b> cada vez que confirmas un pedido (tanto al exportar PDF como al confirmar sin PDF). Así siempre hay una copia del estado anterior a cada cambio de stock importante.</li>
+                  <li><b>Manualmente</b> pulsando "Crear copia de seguridad" en Ajustes ⚙, cuando quieras hacerlo tú mismo.</li>
+                </ul>
+                <p style={helpText}>
+                  Por defecto se guardan en la carpeta <code style={helpCode}>backups/</code> dentro de los datos de la app, sin ocupar el escritorio. Puedes cambiar la carpeta desde Ajustes ⚙.
+                </p>
+              </section>
+
+              {/* BLOQUE: cómo recuperar */}
+              <section style={{ marginBottom: "24px" }}>
+                <div style={helpSectionTitle}>¿Cómo recupero los datos si algo va mal?</div>
+                <p style={helpText}>Si la base de datos se corrompe o pierdes datos accidentalmente, sigue estos pasos:</p>
+                <ol style={helpList}>
+                  <li>Cierra la aplicación completamente.</li>
+                  <li>Localiza la carpeta de backups (la que aparece en Ajustes ⚙ → Copias de seguridad). Si nunca la cambiaste, busca <code style={helpCode}>backups/</code> dentro de la carpeta de datos de la app:
+                    <ul style={{ ...helpList, marginTop: "6px" }}>
+                      <li><b>Windows:</b> <code style={helpCode}>%APPDATA%\Inventario\backups\</code></li>
+                      <li><b>macOS:</b> <code style={helpCode}>~/Library/Application Support/Inventario/backups/</code></li>
+                      <li><b>Linux:</b> <code style={helpCode}>~/.local/share/Inventario/backups/</code></li>
+                    </ul>
+                  </li>
+                  <li>Elige el archivo de copia más reciente (el que tenga la fecha más próxima al momento en que los datos estaban bien).</li>
+                  <li>Renómbralo a <code style={helpCode}>inventario.db</code>.</li>
+                  <li>Cópialo a la carpeta de datos de la app (un nivel más arriba que <code style={helpCode}>backups/</code>), sobreescribiendo el archivo existente.</li>
+                  <li>Vuelve a abrir la aplicación. Los datos se habrán restaurado.</li>
+                </ol>
+              </section>
+
+              {/* BLOQUE: recomendación */}
+              <section style={{ padding: "14px 16px", backgroundColor: "#eff6ff", borderRadius: "8px", border: "1px solid #bfdbfe" }}>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "#1d4ed8", marginBottom: "6px" }}>💡 Recomendación</div>
+                <p style={{ ...helpText, margin: 0, color: "#1e40af" }}>
+                  Si usas la aplicación a diario, configura la carpeta de backups en una unidad externa, un pendrive o una carpeta sincronizada con la nube (Google Drive, OneDrive…). Así las copias también estarán protegidas si el equipo falla.
+                </p>
+              </section>
+
+            </div>
+          </div>
+        </div>
+      )}
+
       {dialog}
     </div>
   )
@@ -782,6 +869,37 @@ const tdStyle: React.CSSProperties = {
   padding: "12px 16px",
   fontSize: "14px",
   verticalAlign: "middle",
+}
+
+const helpSectionTitle: React.CSSProperties = {
+  fontSize: "13px",
+  fontWeight: 700,
+  color: "#111",
+  marginBottom: "8px",
+}
+
+const helpText: React.CSSProperties = {
+  fontSize: "13px",
+  color: "#555",
+  lineHeight: 1.6,
+  margin: "0 0 8px",
+}
+
+const helpList: React.CSSProperties = {
+  fontSize: "13px",
+  color: "#555",
+  lineHeight: 1.7,
+  paddingLeft: "20px",
+  margin: "0 0 8px",
+}
+
+const helpCode: React.CSSProperties = {
+  fontFamily: "monospace",
+  fontSize: "12px",
+  backgroundColor: "#f3f4f6",
+  padding: "1px 5px",
+  borderRadius: "4px",
+  color: "#374151",
 }
 
 export default App
