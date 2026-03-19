@@ -20,36 +20,36 @@
   "productos": [
     {
       "id": 1,
-      "sku": "2.09 - 2.10",
-      "nombre": "CAMISA MANGA LARGA AZUL CELESTE (HOMBRE - MUJER)",
+      "sku": "2.09",
+      "nombre": "CAMISA INVIERNO HOMBRE",
       "departamento_id": 1,
       "stock": [
         {
           "talla": "2XL",
-          "cantidad": 6
+          "cantidad": 0
         },
         {
           "talla": "L",
-          "cantidad": 10
+          "cantidad": 0
         },
         {
           "talla": "M",
-          "cantidad": 9
+          "cantidad": 0
         },
         {
           "talla": "S",
-          "cantidad": 12
+          "cantidad": 0
         },
         {
           "talla": "XL",
-          "cantidad": 13
+          "cantidad": 0
         }
       ]
     },
     {
       "id": 2,
       "sku": "1.01",
-      "nombre": "ANORAK AZUL MARINO COMBINADO",
+      "nombre": "ANORAK (COMBINADO EN AV)",
       "departamento_id": 4,
       "stock": [
         {
@@ -93,7 +93,7 @@
     {
       "id": 3,
       "sku": "1.08",
-      "nombre": "CAMISA MANGA CORTA COMBINADO EN AV",
+      "nombre": "CAMISA MANGA CORTA (COMBINADO EN AV)",
       "departamento_id": 4,
       "stock": [
         {
@@ -125,7 +125,7 @@
     {
       "id": 4,
       "sku": "1.07",
-      "nombre": "CAMISA MANGA LARGA COMBINADO EN AV",
+      "nombre": "CAMISA MANGA LARGA (COMBINADO EN AV)",
       "departamento_id": 4,
       "stock": [
         {
@@ -153,7 +153,7 @@
     {
       "id": 5,
       "sku": "1.02",
-      "nombre": "CHAQUETA FORRO POLAR COMBINADO AV",
+      "nombre": "CHAQUETA FORRO POLAR (COMBINADO EN AV)",
       "departamento_id": 4,
       "stock": [
         {
@@ -162,11 +162,11 @@
         },
         {
           "talla": "M",
-          "cantidad": 14
+          "cantidad": 13
         },
         {
           "talla": "L",
-          "cantidad": 9
+          "cantidad": 8
         },
         {
           "talla": "XL",
@@ -174,7 +174,7 @@
         },
         {
           "talla": "2XL",
-          "cantidad": 11
+          "cantidad": 10
         },
         {
           "talla": "3XL",
@@ -206,7 +206,7 @@
         },
         {
           "talla": "L",
-          "cantidad": 5
+          "cantidad": 4
         },
         {
           "talla": "XL",
@@ -257,7 +257,7 @@
     {
       "id": 8,
       "sku": "2.18",
-      "nombre": "CHAQUETA FORRO POLAR MARINO HOMBRE",
+      "nombre": "CHAQUETA FORRO POLAR AZUL MARINO HOMBRE",
       "departamento_id": 1,
       "stock": [
         {
@@ -288,8 +288,8 @@
     },
     {
       "id": 9,
-      "sku": "2.017",
-      "nombre": "JERSEY O CHAQUETA PUNTO FINO HOMBRE",
+      "sku": "2.17",
+      "nombre": "JERSEY O CHAQUETA PUNTO HOMBRE",
       "departamento_id": 1,
       "stock": [
         {
@@ -304,8 +304,8 @@
     },
     {
       "id": 10,
-      "sku": "2.017",
-      "nombre": "JERSEY O CHAQUETA PUNTO FINO MUJER",
+      "sku": "2.17",
+      "nombre": "JERSEY O CHAQUETA PUNTO MUJER",
       "departamento_id": 1,
       "stock": [
         {
@@ -329,7 +329,7 @@
     {
       "id": 11,
       "sku": "2.04",
-      "nombre": "PANTALON CHINO HOMBRE VERANO",
+      "nombre": "PANTALON CHINO VERANO HOMBRE",
       "departamento_id": 1,
       "stock": [
         {
@@ -381,7 +381,7 @@
     {
       "id": 12,
       "sku": "2.05",
-      "nombre": "PANTALON CHINO MUJER VERANO",
+      "nombre": "PANTALON CHINO VERANO MUJER",
       "departamento_id": 1,
       "stock": [
         {
@@ -433,7 +433,7 @@
     {
       "id": 13,
       "sku": "3.02",
-      "nombre": "PANTALON GRIS MULTIBOLSILLO INVIERNO",
+      "nombre": "PANTALON MULTIBOLSILLOS INVIERNO (GRIS)",
       "departamento_id": 3,
       "stock": [
         {
@@ -465,7 +465,7 @@
     {
       "id": 14,
       "sku": "3.01",
-      "nombre": "PANTALON GRIS MULTIBOLSILLO VERANO",
+      "nombre": "PANTALON MULTIBOLSILLOS VERANO SLIM (GRIS)",
       "departamento_id": 3,
       "stock": [
         {
@@ -529,7 +529,7 @@
     {
       "id": 15,
       "sku": "1.04",
-      "nombre": "PANTALON INVIERNO COMBINADO EN AV",
+      "nombre": "PANTALON INVIERNO (COMBINADO EN AV)",
       "departamento_id": 4,
       "stock": [
         {
@@ -601,7 +601,7 @@
     {
       "id": 16,
       "sku": "1.05",
-      "nombre": "PANTALON VERANO COMBINADO EN AV",
+      "nombre": "PANTALON VERANO (COMBINADO EN AV)",
       "departamento_id": 4,
       "stock": [
         {
@@ -610,7 +610,7 @@
         },
         {
           "talla": "38",
-          "cantidad": 58
+          "cantidad": 55
         },
         {
           "talla": "40",
@@ -618,7 +618,7 @@
         },
         {
           "talla": "42",
-          "cantidad": 16
+          "cantidad": 14
         },
         {
           "talla": "44",
@@ -630,7 +630,7 @@
         },
         {
           "talla": "48",
-          "cantidad": 19
+          "cantidad": 17
         },
         {
           "talla": "50",
@@ -646,7 +646,7 @@
         },
         {
           "talla": "56",
-          "cantidad": 4
+          "cantidad": 2
         },
         {
           "talla": "58",
@@ -745,7 +745,7 @@
     {
       "id": 18,
       "sku": "2.01",
-      "nombre": "PARKA CONSERJES",
+      "nombre": "PARKA (CONSERJES)",
       "departamento_id": 1,
       "stock": [
         {
@@ -1001,24 +1001,24 @@
     {
       "id": 27,
       "sku": "1.07",
-      "nombre": "POLO MANGA LARGA COMBINADO EN AV",
+      "nombre": "POLO MANGA LARGA (COMBINADO EN AV)",
       "departamento_id": 4,
       "stock": [
         {
           "talla": "S",
-          "cantidad": 17
-        },
-        {
-          "talla": "M",
           "cantidad": 15
         },
         {
+          "talla": "M",
+          "cantidad": 14
+        },
+        {
           "talla": "L",
-          "cantidad": 17
+          "cantidad": 16
         },
         {
           "talla": "XL",
-          "cantidad": 27
+          "cantidad": 26
         },
         {
           "talla": "2XL",
@@ -1064,7 +1064,7 @@
     },
     {
       "id": 29,
-      "sku": "3.03 - 3.04",
+      "sku": "3.03",
       "nombre": "POLO MANGA LARGA BLANCO HOMBRE",
       "departamento_id": 3,
       "stock": [
@@ -1097,7 +1097,7 @@
     {
       "id": 30,
       "sku": "3.08",
-      "nombre": "SUDADERA GRIS CUELLO REDONDO",
+      "nombre": "SUDADERA (GRIS)",
       "departamento_id": 3,
       "stock": [
         {
@@ -1124,7 +1124,7 @@
     },
     {
       "id": 31,
-      "sku": "3.03",
+      "sku": "3.04",
       "nombre": "POLO MANGA LARGA BLANCO MUJER",
       "departamento_id": 3,
       "stock": [
@@ -1236,8 +1236,8 @@
     },
     {
       "id": 34,
-      "sku": "2.02",
-      "nombre": "PANTALON CHINO MUJER INVIERNO",
+      "sku": "2.03",
+      "nombre": "PANTALON CHINO INVIERNO MUJER",
       "departamento_id": 1,
       "stock": [
         {
@@ -1392,8 +1392,8 @@
     },
     {
       "id": 37,
-      "sku": null,
-      "nombre": "FORRO POLAR AZUL MARINO MUJER",
+      "sku": "2.18",
+      "nombre": "CHAQUETA FORRO POLAR AZUL MARINO MUJER",
       "departamento_id": 1,
       "stock": [
         {
@@ -1421,24 +1421,24 @@
     {
       "id": 38,
       "sku": "1.08",
-      "nombre": "POLO MANGA CORTA COMBINADO EN AV",
+      "nombre": "POLO MANGA CORTA (COMBINADO EN AV)",
       "departamento_id": 4,
       "stock": [
         {
           "talla": "S",
-          "cantidad": 24
+          "cantidad": 22
         },
         {
           "talla": "M",
-          "cantidad": 46
+          "cantidad": 45
         },
         {
           "talla": "L",
-          "cantidad": 34
+          "cantidad": 33
         },
         {
           "talla": "XL",
-          "cantidad": 32
+          "cantidad": 31
         },
         {
           "talla": "2XL",
@@ -1461,7 +1461,7 @@
     {
       "id": 39,
       "sku": "1.14",
-      "nombre": "TRAJE DE AGUA ALTA VISIBILIDAD",
+      "nombre": "TRAJE DE AGUA (ALTA VISIBILIDAD)",
       "departamento_id": 4,
       "stock": [
         {
@@ -1496,7 +1496,7 @@
     },
     {
       "id": 40,
-      "sku": null,
+      "sku": "2.19",
       "nombre": "CALZADO U POWER",
       "departamento_id": 4,
       "stock": [
@@ -1544,7 +1544,7 @@
     },
     {
       "id": 41,
-      "sku": null,
+      "sku": "2.20",
       "nombre": "CALZADO NORMAL",
       "departamento_id": 4,
       "stock": [
@@ -1574,7 +1574,7 @@
         },
         {
           "talla": "42",
-          "cantidad": 6
+          "cantidad": 5
         },
         {
           "talla": "43",
@@ -1593,6 +1593,13 @@
           "cantidad": 3
         }
       ]
+    },
+    {
+      "id": 42,
+      "sku": "2.10",
+      "nombre": "CAMISA INVIERNO MUJER",
+      "departamento_id": 1,
+      "stock": []
     }
   ]
 }
