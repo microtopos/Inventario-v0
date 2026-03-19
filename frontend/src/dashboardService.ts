@@ -95,80 +95,29 @@ export async function getConsumoPorDepartamento(
   }))
 }
 
+export async function getMovimientosCount(
+  desde?: string,
+  hasta?: string
+): Promise<number> {
+  const db = await getDB()
+  const { whereSql, params } = buildDateRangeWhere("m.fecha", desde, hasta)
+  const rows: any = await db.select(
+    `SELECT COUNT(*) as total
+     FROM movimientos m
+     JOIN tallas t ON t.id = m.talla_id
+     JOIN productos p ON p.id = t.producto_id
+     LEFT JOIN departamentos d ON d.id = p.departamento_id
+     ${whereSql}`,
+    params
+  )
+  return Number(rows[0]?.total) || 0
+}
+
 export async function getMovimientos(
   desde?: string,
-  hasta?: string
-): Promise<
-  {
-    id: number
-    fecha: string
-    cambio: number
-    origen: string | null
-    talla: string
-    producto: string
-    codigo: string | null
-    color: string | null
-    departamento: string
-  }[]
-> {
-  const db = await getDB()
-  const { whereSql, params } = buildDateRangeWhere("m.fecha", desde, hasta)
-  const rows: any = await db.select(
-    `
-      SELECT
-        m.id,
-        m.fecha,
-        m.cambio,
-        m.origen,
-        t.talla,
-        p.nombre as producto,
-        p.codigo,
-        p.color,
-        COALESCE(d.nombre, '(Sin departamento)') as departamento
-      FROM movimientos m
-      JOIN tallas t ON t.id = m.talla_id
-      JOIN productos p ON p.id = t.producto_id
-      LEFT JOIN departamentos d ON d.id = p.departamento_id
-      ${whereSql}
-      ORDER BY m.fecha DESC
-    `,
-    params
-  )
-  return rows.map((r: any) => ({
-    id: Number(r.id),
-    fecha: r.fecha,
-    cambio: Number(r.cambio) || 0,
-    origen: r.origen ?? null,
-    talla: r.talla,
-    producto: r.producto,
-    codigo: r.codigo ?? null,
-    color: r.color ?? null,
-    departamento: r.departamento,
-  }))
-}
-
-export async function getMovimientosCount(desde?: string, hasta?: string): Promise<number> {
-  const db = await getDB()
-  const { whereSql, params } = buildDateRangeWhere("m.fecha", desde, hasta)
-  const rows: any = await db.select(
-    `
-      SELECT COUNT(*) as total
-      FROM movimientos m
-      JOIN tallas t ON t.id = m.talla_id
-      JOIN productos p ON p.id = t.producto_id
-      LEFT JOIN departamentos d ON d.id = p.departamento_id
-      ${whereSql}
-    `,
-    params
-  )
-  return Number(rows?.[0]?.total) || 0
-}
-
-export async function getMovimientosPaged(
-  limit: number,
-  offset: number,
-  desde?: string,
-  hasta?: string
+  hasta?: string,
+  limit = 25,
+  offset = 0
 ): Promise<
   {
     id: number

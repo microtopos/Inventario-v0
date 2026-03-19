@@ -16,6 +16,7 @@ import {
   getConsumoPorDepartamento,
   getEntradasPorDepartamento,
   getMovimientos,
+  getMovimientosCount,
   getStockPorDepartamento,
 } from "./dashboardService"
 import AppHeader from "./AppHeader"
@@ -211,6 +212,9 @@ export default function DashboardPage({ onNavigate, draftCount }: { onNavigate: 
   const [entradas, setEntradas] = useState<{ mes: string; departamento: string; total: number }[]>([])
   const [consumo, setConsumo] = useState<{ mes: string; departamento: string; total: number }[]>([])
   const [movs, setMovs] = useState<any[]>([])
+  const [movsTotal, setMovsTotal] = useState(0)
+  const [movsPage, setMovsPage] = useState(0)
+  const [movsPageSize, setMovsPageSize] = useState(25)
   const [loading, setLoading] = useState(false)
 
   function applyPreset(p: RangePreset) {
@@ -237,26 +241,36 @@ export default function DashboardPage({ onNavigate, draftCount }: { onNavigate: 
       try {
         const d = desde?.trim() || undefined
         const h = hasta?.trim() || undefined
-        const [s, e, c, m] = await Promise.all([
+        const [s, e, c, m, total] = await Promise.all([
           getStockPorDepartamento(),
           getEntradasPorDepartamento(d, h),
           getConsumoPorDepartamento(d, h),
-          getMovimientos(d, h),
+          getMovimientos(d, h, movsPageSize, 0),
+          getMovimientosCount(d, h),
         ])
         setStock(s)
         setEntradas(e)
         setConsumo(c)
         setMovs(m)
+        setMovsTotal(total)
+        setMovsPage(0)
       } finally {
         setLoading(false)
       }
     }
     load()
-  }, [desde, hasta])
+  }, [desde, hasta, movsPageSize])
+
+  async function loadMovsPage(page: number) {
+    const d = desde?.trim() || undefined
+    const h = hasta?.trim() || undefined
+    const m = await getMovimientos(d, h, movsPageSize, page * movsPageSize)
+    setMovs(m)
+    setMovsPage(page)
+  }
 
   const entradasPivot = useMemo(() => pivotByMes(entradas), [entradas])
   const consumoPivot = useMemo(() => pivotByMes(consumo), [consumo])
-  const lastMovs = useMemo(() => movs.slice(0, 25), [movs])
 
   const totalStock = useMemo(() => stock.reduce((a, r) => a + r.stock, 0), [stock])
   const totalConsumo = useMemo(() => sumPivot(consumoPivot), [consumoPivot])
@@ -432,13 +446,62 @@ export default function DashboardPage({ onNavigate, draftCount }: { onNavigate: 
         <div style={{ ...cardStyle, marginTop: "16px", overflow: "hidden" }}>
           <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <div style={sectionTitleStyle}>Últimos movimientos</div>
+              <div style={sectionTitleStyle}>Movimientos</div>
               <div style={sectionSubStyle}>
-                {lastMovs.length > 0
-                  ? `Mostrando los últimos ${lastMovs.length}, ordenados por fecha`
+                {movsTotal > 0
+                  ? `${movsTotal} movimiento${movsTotal !== 1 ? "s" : ""} en el período`
                   : "Sin movimientos en el período seleccionado"}
               </div>
             </div>
+            {movsTotal > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "12px", color: "#aaa" }}>Mostrar:</span>
+                  {[10, 25, 50].map(size => (
+                    <button
+                      key={size}
+                      onClick={() => setMovsPageSize(size)}
+                      style={{
+                        padding: "4px 10px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
+                        border: movsPageSize === size ? "1px solid #111" : "1px solid #e0e0e0",
+                        backgroundColor: movsPageSize === size ? "#111" : "#fff",
+                        color: movsPageSize === size ? "#fff" : "#555",
+                        fontWeight: movsPageSize === size ? 600 : 400,
+                      }}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+                {movsTotal > movsPageSize && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "12px", color: "#aaa" }}>
+                      {movsPage + 1} / {Math.ceil(movsTotal / movsPageSize)}
+                    </span>
+                    <button
+                      onClick={() => loadMovsPage(movsPage - 1)}
+                      disabled={movsPage === 0}
+                      style={{
+                        padding: "4px 10px", borderRadius: "6px", border: "1px solid #e0e0e0",
+                        backgroundColor: "#fff", fontSize: "13px",
+                        cursor: movsPage === 0 ? "not-allowed" : "pointer",
+                        color: movsPage === 0 ? "#ccc" : "#333",
+                      }}
+                    >←</button>
+                    <button
+                      onClick={() => loadMovsPage(movsPage + 1)}
+                      disabled={(movsPage + 1) * movsPageSize >= movsTotal}
+                      style={{
+                        padding: "4px 10px", borderRadius: "6px", border: "1px solid #e0e0e0",
+                        backgroundColor: "#fff", fontSize: "13px",
+                        cursor: (movsPage + 1) * movsPageSize >= movsTotal ? "not-allowed" : "pointer",
+                        color: (movsPage + 1) * movsPageSize >= movsTotal ? "#ccc" : "#333",
+                      }}
+                    >→</button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
@@ -452,14 +515,14 @@ export default function DashboardPage({ onNavigate, draftCount }: { onNavigate: 
               </tr>
             </thead>
             <tbody>
-              {lastMovs.length === 0 && (
+              {movs.length === 0 && (
                 <tr>
                   <td colSpan={6} style={{ padding: "32px 22px", color: "#bbb", textAlign: "center", fontSize: "14px" }}>
                     No hay movimientos en el rango seleccionado
                   </td>
                 </tr>
               )}
-              {lastMovs.map((m: any) => {
+              {movs.map((m: any) => {
                 const isEntrada = Number(m.cambio) > 0
                 const origen = m.origen === "pedido" ? "📦 Pedido" : m.origen ? "✏️ Manual" : "—"
                 return (
@@ -478,12 +541,8 @@ export default function DashboardPage({ onNavigate, draftCount }: { onNavigate: 
                     <td style={tdStyle}>{m.departamento}</td>
                     <td style={{ ...tdStyle, fontWeight: 800 }}>
                       <span style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        padding: "3px 8px",
-                        borderRadius: "6px",
-                        fontSize: "13px",
+                        display: "inline-flex", alignItems: "center", gap: "4px",
+                        padding: "3px 8px", borderRadius: "6px", fontSize: "13px",
                         backgroundColor: isEntrada ? "#f0fdf4" : "#fff1f2",
                         color: isEntrada ? "#16a34a" : "#dc2626",
                       }}>
