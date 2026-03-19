@@ -278,11 +278,6 @@ export default function OrderPage({ onNavigate, onDraftChange }: { onNavigate: (
         const boxPadX = 3
         const maxWidth = CW - boxPadX * 2
 
-        doc.setFont("helvetica", "bold")
-        doc.setFontSize(7.5)
-        doc.setTextColor(...gris)
-        doc.text("NOTAS", ML + 2, y + 3.5)
-
         doc.setFont("helvetica", "normal")
         doc.setFontSize(8.5)
         doc.setTextColor(...negro)
