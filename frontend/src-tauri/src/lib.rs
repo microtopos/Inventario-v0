@@ -217,6 +217,16 @@ pub fn run() {
                             ",
                             kind: MigrationKind::Up,
                         },
+                        Migration {
+                            version: 4,
+                            description: "recepción parcial y modificaciones por línea",
+                            sql: "
+                                ALTER TABLE pedido_items ADD COLUMN cantidad_acordada INTEGER;
+                                ALTER TABLE pedido_items ADD COLUMN cantidad_recibida INTEGER NOT NULL DEFAULT 0;
+                                ALTER TABLE pedido_items ADD COLUMN estado TEXT NOT NULL DEFAULT 'pendiente';
+                            ",
+                            kind: MigrationKind::Up,
+                        },
                     ],
                 )
                 .build(),

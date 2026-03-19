@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { getOrders, getOrderDetail, receiveOrder, deleteOrder } from "./orderService"
+import { getOrders, getOrderDetail, receiveItem, receivePrendaItems, modifyItem, updateOrderNotes, deleteOrder } from "./orderService"
 import AppHeader from "./AppHeader"
 import { useConfirm } from "./ConfirmDialog"
 import { ordenarTallas } from "./sortTallas"
@@ -30,8 +30,16 @@ function agruparItems(items: any[]) {
         total: 0,
       }
     }
-    map[key].tallas.push({ talla: item.talla, cantidad: item.cantidad, stock_actual: item.stock_actual })
-    map[key].total += item.cantidad
+    map[key].tallas.push({
+      itemId: item.id,
+      talla: item.talla,
+      cantidad: item.cantidad,
+      cantidad_acordada: item.cantidad_acordada,
+      cantidad_recibida: item.cantidad_recibida,
+      estado: item.estado,
+      stock_actual: item.stock_actual,
+    })
+    map[key].total += Number(item.cantidad_acordada ?? item.cantidad) || 0
   }
   for (const key in map) {
     map[key].tallas.sort((a: any, b: any) => ordenarTallas(a.talla, b.talla))
@@ -54,6 +62,10 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
   const receivingRef = useRef(false)
   // Guarda de desmontaje: evita setState después de desmontar el componente
   const mountedRef = useRef(true)
+  const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [notesDraft, setNotesDraft] = useState("")
+  const [editingItemId, setEditingItemId] = useState<number | null>(null)
+  const [editValue, setEditValue] = useState("")
 
   useEffect(() => {
     mountedRef.current = true
@@ -75,38 +87,130 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
     setSelectedOrder(order)
     const detail = await getOrderDetail(order.id)
     setOrderDetail(detail)
+    setNotesDraft(order.notas ?? "")
+    setEditingItemId(null)
+    setEditValue("")
   }
 
-  async function handleReceive() {
+  function orderBadge(o: any): { text: string; bg: string; color: string } {
+    if (o.recibido) return { text: "✅ Completado", bg: "#dcfce7", color: "#166534" }
+    const recibidas = Number(o.lineas_recibidas) || 0
+    const total = Number(o.num_lineas) || 0
+    if (recibidas > 0) return { text: `📦 En curso (${recibidas}/${total})`, bg: "#eff6ff", color: "#1d4ed8" }
+    return { text: "⏳ Pendiente", bg: "#fef3c7", color: "#92400e" }
+  }
+
+  async function refreshSelectedOrder() {
     if (!selectedOrder) return
-    if (receivingRef.current) return // barrera síncrona anti-doble-clic
+    const [ordersList, detail] = await Promise.all([getOrders(), getOrderDetail(selectedOrder.id)])
+    const row = ordersList.find((o: any) => o.id === selectedOrder.id) ?? selectedOrder
+    if (mountedRef.current) {
+      setOrders(ordersList)
+      setSelectedOrder(row)
+      setOrderDetail(detail)
+    }
+  }
 
-    const ok = await confirm(
-      `¿Marcar el pedido #${selectedOrder.id} como recibido? Esto actualizará el stock de todas las prendas incluidas.`,
-      { confirmLabel: "Marcar como recibido" }
-    )
-    if (!ok) return
-
+  async function handleReceiveItem(itemId: number) {
+    if (!selectedOrder) return
+    if (receivingRef.current) return
     receivingRef.current = true
     setReceiving(true)
-
     try {
-      await receiveOrder(selectedOrder.id)
-
-      if (!mountedRef.current) return // componente desmontado: no tocar estado
-
-      await loadOrders()
-      const detail = await getOrderDetail(selectedOrder.id)
-
-      if (mountedRef.current) {
-        setOrderDetail(detail)
-        setSelectedOrder((prev: any) => ({ ...prev, recibido: 1 }))
-      }
-      toast.success("Pedido recibido", `Pedido #${selectedOrder.id} marcado como recibido`)
+      await receiveItem(itemId)
+      await refreshSelectedOrder()
+    } catch (e: any) {
+      console.error(e)
+      toast.error("No se pudo recibir", e?.message ?? String(e))
     } finally {
       receivingRef.current = false
       if (mountedRef.current) setReceiving(false)
     }
+  }
+
+  async function handleReceivePrenda(itemIds: number[]) {
+    if (!selectedOrder) return
+    if (receivingRef.current) return
+    receivingRef.current = true
+    setReceiving(true)
+    try {
+      await receivePrendaItems(itemIds)
+      await refreshSelectedOrder()
+    } catch (e: any) {
+      console.error(e)
+      toast.error("No se pudo recibir la prenda", e?.message ?? String(e))
+    } finally {
+      receivingRef.current = false
+      if (mountedRef.current) setReceiving(false)
+    }
+  }
+
+  async function handleReceiveAll() {
+    if (!selectedOrder) return
+    const pendingIds = orderDetail
+      .filter((it: any) => {
+        const st = String(it.estado ?? "pendiente")
+        return st === "pendiente" || st === "modificado"
+      })
+      .map((it: any) => it.id as number)
+    if (pendingIds.length === 0) return
+    const ok = await confirm(
+      "¿Marcar todo el pedido como recibido? Se actualizará el stock de todas las prendas pendientes.",
+      { confirmLabel: "Recibir todo" }
+    )
+    if (!ok) return
+    if (receivingRef.current) return
+    receivingRef.current = true
+    setReceiving(true)
+    try {
+      await receivePrendaItems(pendingIds)
+      await refreshSelectedOrder()
+    } catch (e: any) {
+      console.error(e)
+      toast.error("No se pudo recibir el pedido", e?.message ?? String(e))
+    } finally {
+      receivingRef.current = false
+      if (mountedRef.current) setReceiving(false)
+    }
+  }
+
+  async function handleSaveModify(itemId: number) {
+    const raw = editValue.trim()
+    const n = raw === "" ? null : Number(raw)
+    if (raw !== "" && (!Number.isFinite(n) || n! < 0)) {
+      toast.error("Cantidad inválida", "Usa un número (0 para cancelar).")
+      return
+    }
+    if (receivingRef.current) return
+    receivingRef.current = true
+    setReceiving(true)
+    try {
+      await modifyItem(itemId, raw === "" ? null : Math.trunc(n as number))
+      setEditingItemId(null)
+      setEditValue("")
+      await refreshSelectedOrder()
+    } catch (e: any) {
+      console.error(e)
+      toast.error("No se pudo modificar", e?.message ?? String(e))
+    } finally {
+      receivingRef.current = false
+      if (mountedRef.current) setReceiving(false)
+    }
+  }
+
+  function scheduleSaveNotes(next: string) {
+    if (!selectedOrder) return
+    if (notesTimer.current) clearTimeout(notesTimer.current)
+    notesTimer.current = setTimeout(async () => {
+      try {
+        await updateOrderNotes(selectedOrder.id, next)
+        await loadOrders()
+        setSelectedOrder((prev: any) => ({ ...prev, notas: next }))
+        toast.success("Notas guardadas")
+      } catch (e: any) {
+        toast.error("No se pudieron guardar las notas", e?.message ?? String(e))
+      }
+    }, 600)
   }
 
   async function handleDelete(order: any) {
@@ -428,10 +532,10 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
         )}
       </div>
 
-      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "28px 24px", display: "flex", gap: "24px" }}>
+      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "28px 24px", display: "flex", gap: "24px", boxSizing: "border-box" }}>
 
         {/* LISTA DE PEDIDOS */}
-        <div style={{ width: "340px", flexShrink: 0 }}>
+        <div style={{ width: "320px", flexShrink: 0 }}>
 
           {/* FILTROS */}
           <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
@@ -537,18 +641,23 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
                         {order.num_lineas > 0 ? `${order.num_lineas} línea${order.num_lineas !== 1 ? "s" : ""} · ${order.total_unidades ?? 0} unidades` : "Sin artículos"}
                       </div>
                     </div>
-                    <span style={{
-                      padding: "3px 10px",
-                      borderRadius: "20px",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      backgroundColor: order.recibido ? "#dcfce7" : "#fef3c7",
-                      color: order.recibido ? "#166534" : "#92400e",
-                      whiteSpace: "nowrap",
-                      marginLeft: "8px",
-                    }}>
-                      {order.recibido ? "✅ Recibido" : "⏳ Pendiente"}
-                    </span>
+                    {(() => {
+                      const b = orderBadge(order)
+                      return (
+                        <span style={{
+                          padding: "3px 10px",
+                          borderRadius: "20px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          backgroundColor: b.bg,
+                          color: b.color,
+                          whiteSpace: "nowrap",
+                          marginLeft: "8px",
+                        }}>
+                          {b.text}
+                        </span>
+                      )
+                    })()}
                   </div>
                 </div>
               ))
@@ -557,7 +666,7 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
         </div>
 
         {/* DETALLE DEL PEDIDO */}
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           {!selectedOrder ? (
             <div style={{
               backgroundColor: "#fff",
@@ -577,108 +686,146 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
               <div style={{
                 padding: "20px 24px",
                 borderBottom: "1px solid #f0f0f0",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
                 backgroundColor: "#fafafa",
               }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: "17px", color: "#111" }}>
-                    Pedido #{selectedOrder.id}
-                  </div>
-                  <div style={{ fontSize: "13px", color: "#888", marginTop: "3px" }}>
-                    Creado el {formatDate(selectedOrder.fecha)}
-                  </div>
-                  {!!selectedOrder.notas && (
-                    <div style={{ marginTop: "10px" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                        Notas
-                      </div>
-                      <div style={{
-                        fontSize: "13px",
-                        color: "#444",
-                        backgroundColor: "#fff",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        padding: "10px 12px",
-                        maxWidth: "520px",
-                        whiteSpace: "pre-wrap",
-                        lineHeight: 1.35,
-                      }}>
-                        {selectedOrder.notas}
-                      </div>
+                {/* Fila superior: título + botones */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: "17px", color: "#111" }}>
+                      Pedido #{selectedOrder.id}
                     </div>
-                  )}
-                </div>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                  <button
-                    onClick={exportOrderPDF}
-                    disabled={exporting || orderDetail.length === 0}
-                    style={{
-                      padding: "9px 16px",
-                      backgroundColor: "#fff",
-                      color: "#2563eb",
-                      border: "1px solid #bfdbfe",
-                      borderRadius: "7px",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                      cursor: exporting || orderDetail.length === 0 ? "not-allowed" : "pointer",
-                      opacity: orderDetail.length === 0 ? 0.5 : 1,
-                    }}
-                  >
-                    {exporting ? "Exportando…" : "📄 Exportar PDF"}
-                  </button>
-                  {!selectedOrder.recibido && (
+                    <div style={{ fontSize: "13px", color: "#888", marginTop: "3px" }}>
+                      Creado el {formatDate(selectedOrder.fecha)}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center", flexShrink: 0 }}>
                     <button
-                      onClick={handleReceive}
-                      disabled={receiving}
+                      onClick={exportOrderPDF}
+                      disabled={exporting || orderDetail.length === 0}
                       style={{
-                        padding: "9px 20px",
-                        backgroundColor: receiving ? "#ccc" : "#16a34a",
-                        color: "#fff",
-                        border: "none",
+                        padding: "9px 16px",
+                        backgroundColor: "#fff",
+                        color: "#2563eb",
+                        border: "1px solid #bfdbfe",
                         borderRadius: "7px",
                         fontSize: "14px",
                         fontWeight: 600,
-                        cursor: receiving ? "not-allowed" : "pointer",
+                        cursor: exporting || orderDetail.length === 0 ? "not-allowed" : "pointer",
+                        opacity: orderDetail.length === 0 ? 0.5 : 1,
                       }}
                     >
-                      {receiving ? "Actualizando stock..." : "✓ Marcar como recibido"}
+                      {exporting ? "Exportando…" : "📄 Exportar PDF"}
                     </button>
-                  )}
-                  {selectedOrder.recibido && (
-                    <span style={{
-                      padding: "9px 16px",
-                      backgroundColor: "#dcfce7",
-                      color: "#166534",
-                      borderRadius: "7px",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                    }}>
-                      ✅ Pedido recibido
-                    </span>
-                  )}
-                  {!selectedOrder.recibido && (
-                  <button
-                    onClick={() => handleDelete(selectedOrder)}
-                    style={{
-                      padding: "9px 16px",
-                      background: "none",
-                      border: "1px solid #fca5a5",
-                      color: "#dc2626",
-                      borderRadius: "7px",
-                      fontSize: "14px",
-                      cursor: "pointer",
+                    {!!selectedOrder.recibido && (
+                      <span style={{
+                        padding: "9px 16px",
+                        backgroundColor: "#dcfce7",
+                        color: "#166534",
+                        borderRadius: "7px",
+                        fontSize: "14px",
+                        fontWeight: 600,
+                      }}>
+                        ✅ Pedido recibido
+                      </span>
+                    )}
+                    {!selectedOrder.recibido && (() => {
+                      const hasPending = orderDetail.some((it: any) => {
+                        const st = String(it.estado ?? "pendiente")
+                        return st === "pendiente" || st === "modificado"
+                      })
+                      return hasPending ? (
+                        <button
+                          onClick={handleReceiveAll}
+                          disabled={receiving}
+                          style={{
+                            padding: "9px 16px",
+                            backgroundColor: receiving ? "#ccc" : "#16a34a",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "7px",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                            cursor: receiving ? "not-allowed" : "pointer",
+                          }}
+                        >
+                          ✓ Recibir todo
+                        </button>
+                      ) : null
+                    })()}
+                    {!selectedOrder.recibido && (
+                      <button
+                        onClick={() => handleDelete(selectedOrder)}
+                        style={{
+                          padding: "9px 16px",
+                          background: "none",
+                          border: "1px solid #fca5a5",
+                          color: "#dc2626",
+                          borderRadius: "7px",
+                          fontSize: "14px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {/* Fila inferior: notas, ancho completo */}
+                <div style={{ marginTop: "16px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                    Notas
+                  </div>
+                  <textarea
+                    value={notesDraft}
+                    onChange={(e) => {
+                      setNotesDraft(e.target.value)
+                      scheduleSaveNotes(e.target.value)
                     }}
-                  >
-                    Eliminar
-                  </button>
-                  )}
+                    onBlur={() => scheduleSaveNotes(notesDraft)}
+                    placeholder="Proveedor, albarán, condiciones…"
+                    rows={2}
+                    style={{
+                      width: "100%",
+                      resize: "vertical",
+                      padding: "9px 12px",
+                      borderRadius: "8px",
+                      border: "1px solid #ddd",
+                      fontSize: "13px",
+                      boxSizing: "border-box",
+                      backgroundColor: "#fff",
+                      outline: "none",
+                    }}
+                  />
                 </div>
               </div>
 
               {/* TABLA DE PRODUCTOS */}
               <div style={{ padding: "20px 24px" }}>
+                {/* PROGRESO */}
+                {orderDetail.length > 0 ? (() => {
+                  const totals = { recibido: 0, pendiente: 0, modificado: 0, cancelado: 0 }
+                  for (const it of orderDetail as any[]) {
+                    const st = String(it.estado ?? "pendiente")
+                    if (st === "recibido") totals.recibido++
+                    else if (st === "cancelado") totals.cancelado++
+                    else if (st === "modificado") totals.modificado++
+                    else totals.pendiente++
+                  }
+                  const total = orderDetail.length || 1
+                  const done = totals.recibido + totals.cancelado
+                  const pct = Math.round((done / total) * 100)
+                  return (
+                    <div style={{ marginBottom: "14px" }}>
+                      <div style={{ fontSize: "12px", color: "#888", marginBottom: "8px" }}>
+                        Recibidos: <b>{totals.recibido}</b> · Pendientes: <b>{totals.pendiente}</b> · Modificados: <b>{totals.modificado}</b> · Cancelados: <b>{totals.cancelado}</b>
+                      </div>
+                      <div style={{ height: "8px", backgroundColor: "#f0f0f0", borderRadius: "999px", overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", backgroundColor: pct === 100 ? "#16a34a" : "#2563eb" }} />
+                      </div>
+                    </div>
+                  )
+                })() : null}
+
                 {grouped.length === 0 ? (
                   <div style={{ color: "#aaa", textAlign: "center", padding: "32px" }}>Sin artículos</div>
                 ) : (
@@ -706,36 +853,201 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
                           {g.color && <span style={{ color: "#888", fontSize: "13px", marginLeft: "8px" }}>({g.color})</span>}
                           {g.codigo && <span style={{ color: "#aaa", fontSize: "12px", fontFamily: "monospace", marginLeft: "8px" }}>{g.codigo}</span>}
                         </div>
-                        <span style={{ fontSize: "13px", fontWeight: 600, color: "#555" }}>
-                          {g.total} ud. pedidas
-                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontSize: "13px", fontWeight: 600, color: "#555" }}>
+                            {g.total} ud. pedidas
+                          </span>
+                          {!selectedOrder.recibido && (() => {
+                            const pendingIds = g.tallas
+                              .filter((t: any) => {
+                                const st = String(t.estado ?? "pendiente")
+                                return st === "pendiente" || st === "modificado"
+                              })
+                              .map((t: any) => t.itemId as number)
+                            return pendingIds.length > 0 ? (
+                              <button
+                                onClick={() => handleReceivePrenda(pendingIds)}
+                                disabled={receiving}
+                                style={{
+                                  padding: "6px 12px",
+                                  borderRadius: "7px",
+                                  border: "none",
+                                  backgroundColor: receiving ? "#ccc" : "#16a34a",
+                                  color: "#fff",
+                                  fontSize: "12px",
+                                  fontWeight: 700,
+                                  cursor: receiving ? "not-allowed" : "pointer",
+                                }}
+                              >
+                                ✓ Recibir prenda
+                              </button>
+                            ) : null
+                          })()}
+                        </div>
                       </div>
 
-                      {/* Tallas */}
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "12px 16px" }}>
-                        {g.tallas.map((t: any, j: number) => (
-                          <div
-                            key={j}
-                            style={{
-                              border: "1px solid #e0e0e0",
-                              borderRadius: "8px",
-                              padding: "8px 14px",
-                              textAlign: "center",
-                              minWidth: "80px",
-                            }}
-                          >
-                            <div style={{ fontSize: "13px", fontWeight: 700, color: "#111" }}>{t.talla}</div>
-                            <div style={{ fontSize: "13px", color: "#2563eb", fontWeight: 600, marginTop: "2px" }}>
-                              +{t.cantidad} ud.
-                            </div>
-                            {selectedOrder.recibido && (
-                              <div style={{ fontSize: "11px", color: "#888", marginTop: "2px" }}>
-                                stock: {t.stock_actual}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                      {/* Tallas — tabla compacta */}
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <thead>
+                          <tr style={{ backgroundColor: "#fafafa", borderBottom: "1px solid #f0f0f0" }}>
+                            <th style={tallaThStyle}>Talla</th>
+                            <th style={tallaThStyle}>Pedido</th>
+                            <th style={tallaThStyle}>Acordado</th>
+                            <th style={tallaThStyle}>Estado</th>
+                            <th style={tallaThStyle}>Stock tras recibir</th>
+                            <th style={{ ...tallaThStyle, textAlign: "right" }}>Acción</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {g.tallas.map((t: any, j: number) => {
+                            const isCompleted = !!selectedOrder.recibido
+                            const estado = isCompleted ? "recibido" : String(t.estado ?? "pendiente")
+                            const acordada = t.cantidad_acordada
+                            const effective = Number(acordada ?? t.cantidad) || 0
+                            const isEditing = editingItemId === t.itemId
+                            const canAct = !isCompleted && (estado === "pendiente" || estado === "modificado")
+
+                            const rowBg = estado === "recibido"
+                              ? "#f0fdf4"
+                              : estado === "cancelado"
+                              ? "#fafafa"
+                              : "transparent"
+
+                            const badgeEl = (() => {
+                              if (estado === "recibido") return <span style={{ ...tallaBadgeStyle, backgroundColor: "#dcfce7", color: "#166534" }}>Recibido</span>
+                              if (estado === "cancelado") return <span style={{ ...tallaBadgeStyle, backgroundColor: "#f3f4f6", color: "#6b7280" }}>Cancelado</span>
+                              if (estado === "modificado") return <span style={{ ...tallaBadgeStyle, backgroundColor: "#ffedd5", color: "#c2410c" }}>Modificado</span>
+                              return <span style={{ ...tallaBadgeStyle, backgroundColor: "#eff6ff", color: "#2563eb" }}>Pendiente</span>
+                            })()
+
+                            return isEditing ? (
+                              // FILA EDICIÓN — ocupa todo el ancho, sin columnas apretadas
+                              <tr key={j} style={{ borderBottom: "1px solid #f5f5f5", backgroundColor: "#fffbeb" }}>
+                                <td colSpan={6} style={{ padding: "10px 14px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                                    <span style={{ fontWeight: 700, fontSize: "14px", minWidth: "32px" }}>{t.talla}</span>
+                                    <span style={{ fontSize: "13px", color: "#888" }}>Pedido: <b style={{ color: "#2563eb" }}>{t.cantidad} ud.</b></span>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                      <span style={{ fontSize: "13px", color: "#555" }}>Acordar:</span>
+                                      <input
+                                        autoFocus
+                                        type="number"
+                                        min={0}
+                                        value={editValue}
+                                        onChange={(e) => setEditValue(e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") handleSaveModify(t.itemId)
+                                          if (e.key === "Escape") { setEditingItemId(null); setEditValue("") }
+                                        }}
+                                        style={{
+                                          width: "72px",
+                                          padding: "6px 8px",
+                                          borderRadius: "6px",
+                                          border: "1px solid #fcd34d",
+                                          fontSize: "14px",
+                                          textAlign: "center",
+                                          backgroundColor: "#fffbeb",
+                                        }}
+                                      />
+                                      <span style={{ fontSize: "12px", color: "#aaa" }}>ud. &nbsp;(0 = cancelar línea)</span>
+                                    </div>
+                                    <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
+                                      <button
+                                        onClick={() => handleSaveModify(t.itemId)}
+                                        disabled={receiving}
+                                        style={{
+                                          padding: "6px 16px",
+                                          borderRadius: "6px",
+                                          border: "none",
+                                          backgroundColor: receiving ? "#ccc" : "#111",
+                                          color: "#fff",
+                                          fontSize: "13px",
+                                          fontWeight: 600,
+                                          cursor: receiving ? "not-allowed" : "pointer",
+                                        }}
+                                      >
+                                        Guardar
+                                      </button>
+                                      <button
+                                        onClick={() => { setEditingItemId(null); setEditValue("") }}
+                                        style={{
+                                          padding: "6px 14px",
+                                          borderRadius: "6px",
+                                          border: "1px solid #e0e0e0",
+                                          backgroundColor: "#fff",
+                                          color: "#555",
+                                          fontSize: "13px",
+                                          fontWeight: 600,
+                                          cursor: "pointer",
+                                        }}
+                                      >
+                                        Cancelar
+                                      </button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            ) : (
+                              // FILA NORMAL
+                              <tr
+                                key={j}
+                                style={{
+                                  borderBottom: "1px solid #f5f5f5",
+                                  backgroundColor: rowBg,
+                                  opacity: estado === "cancelado" ? 0.55 : 1,
+                                }}
+                              >
+                                {/* TALLA */}
+                                <td style={{ ...tallaTdStyle, fontWeight: 700, fontSize: "14px" }}>{t.talla}</td>
+
+                                {/* PEDIDO */}
+                                <td style={{ ...tallaTdStyle, color: "#2563eb", fontWeight: 600 }}>
+                                  {t.cantidad} ud.
+                                </td>
+
+                                {/* ACORDADO */}
+                                <td style={tallaTdStyle}>
+                                  {acordada !== null && acordada !== undefined && Number(acordada) !== Number(t.cantidad)
+                                    ? <span style={{ fontWeight: 700, color: "#c2410c" }}>{effective} ud.</span>
+                                    : <span style={{ color: "#aaa" }}>—</span>}
+                                </td>
+
+                                {/* ESTADO */}
+                                <td style={tallaTdStyle}>{badgeEl}</td>
+
+                                {/* STOCK TRAS RECIBIR */}
+                                <td style={{ ...tallaTdStyle, color: "#888", fontSize: "13px" }}>
+                                  {estado === "recibido"
+                                    ? <span style={{ fontWeight: 600, color: "#111" }}>{t.stock_actual} ud.</span>
+                                    : "—"}
+                                </td>
+
+                                {/* ACCIÓN */}
+                                <td style={{ ...tallaTdStyle, textAlign: "right" }}>
+                                  {canAct && estado === "pendiente" && (
+                                    <button
+                                      onClick={() => { setEditingItemId(t.itemId); setEditValue(String(effective)) }}
+                                      disabled={receiving}
+                                      style={{
+                                        padding: "5px 12px",
+                                        borderRadius: "6px",
+                                        border: "1px solid #e0e0e0",
+                                        backgroundColor: "#fff",
+                                        color: "#555",
+                                        fontSize: "12px",
+                                        fontWeight: 600,
+                                        cursor: receiving ? "not-allowed" : "pointer",
+                                      }}
+                                    >
+                                      ✎ Modificar
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
                     </div>
                   ))
                 )}
@@ -769,4 +1081,29 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
       {dialog}
     </div>
   )
+}
+
+const tallaThStyle: React.CSSProperties = {
+  padding: "8px 14px",
+  textAlign: "left",
+  fontSize: "11px",
+  fontWeight: 700,
+  color: "#aaa",
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+  whiteSpace: "nowrap",
+}
+
+const tallaTdStyle: React.CSSProperties = {
+  padding: "10px 14px",
+  fontSize: "13px",
+  verticalAlign: "middle",
+}
+
+const tallaBadgeStyle: React.CSSProperties = {
+  display: "inline-block",
+  padding: "3px 9px",
+  borderRadius: "20px",
+  fontSize: "11px",
+  fontWeight: 700,
 }

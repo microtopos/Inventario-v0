@@ -12,7 +12,9 @@ export async function getOrders() {
       p.recibido,
       p.notas,
       COUNT(pi.id) as num_lineas,
-      SUM(pi.cantidad) as total_unidades
+      SUM(CASE WHEN pi.estado = 'recibido' THEN 1 ELSE 0 END) as lineas_recibidas,
+      SUM(CASE WHEN pi.estado = 'cancelado' THEN 1 ELSE 0 END) as lineas_canceladas,
+      SUM(COALESCE(pi.cantidad_acordada, pi.cantidad)) as total_unidades
     FROM pedidos p
     LEFT JOIN pedido_items pi ON pi.pedido_id = p.id
     WHERE p.borrador = 0
@@ -28,6 +30,9 @@ export async function getOrderDetail(orderId: number) {
     SELECT
       pi.id,
       pi.cantidad,
+      pi.cantidad_acordada,
+      pi.cantidad_recibida,
+      pi.estado,
       t.talla,
       t.id as talla_id,
       t.stock as stock_actual,
@@ -43,28 +48,118 @@ export async function getOrderDetail(orderId: number) {
   return items
 }
 
-export async function receiveOrder(orderId: number) {
+async function checkAndCloseOrder(orderId: number): Promise<void> {
   const db = await getDB()
-  const check: any = await db.select("SELECT recibido FROM pedidos WHERE id = ?", [orderId])
-  if (!check[0] || check[0].recibido === 1) return
-
-  const items: any = await db.select(
-    "SELECT talla_id, cantidad FROM pedido_items WHERE pedido_id = ?",
+  const rows: any = await db.select(
+    "SELECT COUNT(*) as total FROM pedido_items WHERE pedido_id = ? AND estado NOT IN ('recibido','cancelado')",
     [orderId]
   )
-  for (const item of items) {
-    await addStock(item.talla_id, item.cantidad, "pedido")
+  const remaining = Number(rows?.[0]?.total) || 0
+  if (remaining === 0) {
+    await db.execute(
+      "UPDATE pedidos SET recibido = 1, fecha_recibido = datetime('now', 'localtime') WHERE id = ?",
+      [orderId]
+    )
   }
-  await db.execute(
-    "UPDATE pedidos SET recibido = 1, fecha_recibido = datetime('now', 'localtime') WHERE id = ?",
-    [orderId]
+}
+
+export async function receiveItem(itemId: number): Promise<void> {
+  const db = await getDB()
+
+  const rows: any = await db.select(
+    "SELECT id, pedido_id, talla_id, cantidad, cantidad_acordada, estado FROM pedido_items WHERE id = ?",
+    [itemId]
   )
+  const it = rows?.[0]
+  if (!it) throw new Error("Ítem no encontrado")
+
+  const estado = String(it.estado ?? "pendiente")
+  if (estado !== "pendiente" && estado !== "modificado") {
+    throw new Error("Este ítem ya fue recibido o no se puede recibir")
+  }
+
+  const effective = Number(it.cantidad_acordada ?? it.cantidad) || 0
+
+  await addStock(Number(it.talla_id), effective, "pedido")
+  await db.execute(
+    "UPDATE pedido_items SET estado = 'recibido', cantidad_recibida = ? WHERE id = ?",
+    [effective, itemId]
+  )
+  await checkAndCloseOrder(Number(it.pedido_id))
+}
+
+export async function receivePrendaItems(itemIds: number[]): Promise<void> {
+  if (itemIds.length === 0) return
+  const db = await getDB()
+
+  // Fetch all items in one query
+  const placeholders = itemIds.map(() => "?").join(",")
+  const rows: any = await db.select(
+    `SELECT id, pedido_id, talla_id, cantidad, cantidad_acordada, estado FROM pedido_items WHERE id IN (${placeholders})`,
+    itemIds
+  )
+
+  let pedidoId: number | null = null
+  for (const it of rows) {
+    const estado = String(it.estado ?? "pendiente")
+    if (estado !== "pendiente" && estado !== "modificado") continue
+    const effective = Number(it.cantidad_acordada ?? it.cantidad) || 0
+    await addStock(Number(it.talla_id), effective, "pedido")
+    await db.execute(
+      "UPDATE pedido_items SET estado = 'recibido', cantidad_recibida = ? WHERE id = ?",
+      [effective, Number(it.id)]
+    )
+    if (pedidoId === null) pedidoId = Number(it.pedido_id)
+  }
+
+  if (pedidoId !== null) {
+    await checkAndCloseOrder(pedidoId)
+  }
+}
+
+export async function modifyItem(itemId: number, nuevaCantidad: number | null): Promise<void> {
+  const db = await getDB()
+
+  const rows: any = await db.select(
+    "SELECT id, pedido_id, cantidad, estado FROM pedido_items WHERE id = ?",
+    [itemId]
+  )
+  const it = rows?.[0]
+  if (!it) throw new Error("Ítem no encontrado")
+
+  const estado = String(it.estado ?? "pendiente")
+  if (estado !== "pendiente") {
+    throw new Error("Solo se puede modificar un ítem pendiente")
+  }
+
+  const next = nuevaCantidad === null ? null : Math.max(0, Number(nuevaCantidad) || 0)
+
+  if (next === null || next === 0) {
+    await db.execute(
+      "UPDATE pedido_items SET cantidad_acordada = 0, estado = 'cancelado' WHERE id = ?",
+      [itemId]
+    )
+  } else {
+    await db.execute(
+      "UPDATE pedido_items SET cantidad_acordada = ?, estado = 'modificado' WHERE id = ?",
+      [next, itemId]
+    )
+  }
+  await checkAndCloseOrder(Number(it.pedido_id))
+}
+
+export async function updateOrderNotes(orderId: number, notas: string): Promise<void> {
+  const db = await getDB()
+  await db.execute("UPDATE pedidos SET notas = ? WHERE id = ?", [notas || null, orderId])
 }
 
 export async function deleteOrder(orderId: number) {
   const db = await getDB()
-  const check: any = await db.select("SELECT recibido FROM pedidos WHERE id = ?", [orderId])
-  if (check[0]?.recibido === 1) throw new Error("No se puede eliminar un pedido ya recibido")
+  const check: any = await db.select(
+    "SELECT COUNT(*) as total FROM pedido_items WHERE pedido_id = ? AND estado = 'recibido'",
+    [orderId]
+  )
+  if ((check?.[0]?.total ?? 0) > 0) throw new Error("No se puede eliminar un pedido con líneas ya recibidas")
   await db.execute("DELETE FROM pedido_items WHERE pedido_id = ?", [orderId])
   await db.execute("DELETE FROM pedidos WHERE id = ?", [orderId])
 }
