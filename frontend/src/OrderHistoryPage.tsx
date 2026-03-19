@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { getOrders, getOrderDetail, receiveItem, receivePrendaItems, modifyItem, updateOrderNotes, deleteOrder } from "./orderService"
+import { getOrders, getOrderDetail, receivePrendaItems, modifyItem, updateOrderNotes, deleteOrder } from "./orderService"
 import AppHeader from "./AppHeader"
 import { useConfirm } from "./ConfirmDialog"
 import { ordenarTallas } from "./sortTallas"
@@ -108,23 +108,6 @@ export default function OrderHistoryPage({ onNavigate, draftCount }: { onNavigat
       setOrders(ordersList)
       setSelectedOrder(row)
       setOrderDetail(detail)
-    }
-  }
-
-  async function handleReceiveItem(itemId: number) {
-    if (!selectedOrder) return
-    if (receivingRef.current) return
-    receivingRef.current = true
-    setReceiving(true)
-    try {
-      await receiveItem(itemId)
-      await refreshSelectedOrder()
-    } catch (e: any) {
-      console.error(e)
-      toast.error("No se pudo recibir", e?.message ?? String(e))
-    } finally {
-      receivingRef.current = false
-      if (mountedRef.current) setReceiving(false)
     }
   }
 
