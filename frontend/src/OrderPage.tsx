@@ -13,7 +13,7 @@ import { useToast } from "./Toast"
 
 type SyncState = "idle" | "saving" | "saved" | "error"
 
-export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => void }) {
+export default function OrderPage({ onNavigate, onDraftChange }: { onNavigate: (page: any) => void; onDraftChange?: (count: number) => void }) {
   const [products, setProducts] = useState<any[]>([])
   const [search, setSearch] = useState("")
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
@@ -85,6 +85,13 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
       if (syncTimer.current) clearTimeout(syncTimer.current)
     }
   }, [pedido, notas, ready])
+
+  // ── Notifica al padre el número de productos distintos en el borrador ────────
+  useEffect(() => {
+    if (!ready) return
+    const count = construirPedido().length
+    onDraftChange?.(count)
+  }, [pedido, ready])
 
   // ── Helpers de estado ────────────────────────────────────────────────────────
 
@@ -470,7 +477,7 @@ export default function OrderPage({ onNavigate }: { onNavigate: (page: any) => v
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", fontFamily: "system-ui, sans-serif" }}>
 
-      <AppHeader page="orders" onNavigate={onNavigate} />
+      <AppHeader page="orders" onNavigate={onNavigate} draftCount={construirPedido().length} />
 
       {/* BARRA DE ACCIONES */}
       <div style={{

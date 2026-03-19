@@ -47,7 +47,7 @@ function agruparItems(items: any[]) {
   return Object.values(map)
 }
 
-export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: any) => void }) {
+export default function OrderHistoryPage({ onNavigate, draftCount }: { onNavigate: (page: any) => void; draftCount?: number }) {
   const [orders, setOrders] = useState<any[]>([])
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
   const [orderDetail, setOrderDetail] = useState<any[]>([])
@@ -502,7 +502,7 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", fontFamily: "system-ui, sans-serif" }}>
 
-      <AppHeader page="orderHistory" onNavigate={onNavigate} />
+      <AppHeader page="orderHistory" onNavigate={onNavigate} draftCount={draftCount} />
 
       {/* SUBHEADER con título y badge */}
       <div style={{
@@ -532,10 +532,10 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
         )}
       </div>
 
-      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "28px 24px", display: "flex", gap: "24px", boxSizing: "border-box" }}>
+      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "28px 24px", display: "flex", gap: "24px" }}>
 
         {/* LISTA DE PEDIDOS */}
-        <div style={{ width: "320px", flexShrink: 0 }}>
+        <div style={{ width: "340px", flexShrink: 0 }}>
 
           {/* FILTROS */}
           <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
@@ -666,7 +666,7 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
         </div>
 
         {/* DETALLE DEL PEDIDO */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1 }}>
           {!selectedOrder ? (
             <div style={{
               backgroundColor: "#fff",
@@ -686,123 +686,123 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
               <div style={{
                 padding: "20px 24px",
                 borderBottom: "1px solid #f0f0f0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
                 backgroundColor: "#fafafa",
               }}>
-                {/* Fila superior: título + botones */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: "17px", color: "#111" }}>
-                      Pedido #{selectedOrder.id}
-                    </div>
-                    <div style={{ fontSize: "13px", color: "#888", marginTop: "3px" }}>
-                      Creado el {formatDate(selectedOrder.fecha)}
-                    </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: "17px", color: "#111" }}>
+                    Pedido #{selectedOrder.id}
                   </div>
-                  <div style={{ display: "flex", gap: "10px", alignItems: "center", flexShrink: 0 }}>
-                    <button
-                      onClick={exportOrderPDF}
-                      disabled={exporting || orderDetail.length === 0}
-                      style={{
-                        padding: "9px 16px",
-                        backgroundColor: "#fff",
-                        color: "#2563eb",
-                        border: "1px solid #bfdbfe",
-                        borderRadius: "7px",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        cursor: exporting || orderDetail.length === 0 ? "not-allowed" : "pointer",
-                        opacity: orderDetail.length === 0 ? 0.5 : 1,
+                  <div style={{ fontSize: "13px", color: "#888", marginTop: "3px" }}>
+                    Creado el {formatDate(selectedOrder.fecha)}
+                  </div>
+                  <div style={{ marginTop: "10px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                      Notas
+                    </div>
+                    <textarea
+                      value={notesDraft}
+                      onChange={(e) => {
+                        setNotesDraft(e.target.value)
+                        scheduleSaveNotes(e.target.value)
                       }}
-                    >
-                      {exporting ? "Exportando…" : "📄 Exportar PDF"}
-                    </button>
-                    {!!selectedOrder.recibido && (
-                      <span style={{
-                        padding: "9px 16px",
-                        backgroundColor: "#dcfce7",
-                        color: "#166534",
-                        borderRadius: "7px",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                      }}>
-                        ✅ Pedido recibido
-                      </span>
-                    )}
-                    {!selectedOrder.recibido && (() => {
-                      const hasPending = orderDetail.some((it: any) => {
-                        const st = String(it.estado ?? "pendiente")
-                        return st === "pendiente" || st === "modificado"
-                      })
-                      return hasPending ? (
-                        <button
-                          onClick={handleReceiveAll}
-                          disabled={receiving}
-                          style={{
-                            padding: "9px 16px",
-                            backgroundColor: receiving ? "#ccc" : "#16a34a",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "7px",
-                            fontSize: "14px",
-                            fontWeight: 600,
-                            cursor: receiving ? "not-allowed" : "pointer",
-                          }}
-                        >
-                          ✓ Recibir todo
-                        </button>
-                      ) : null
-                    })()}
-                    {!selectedOrder.recibido && (
-                      <button
-                        onClick={() => handleDelete(selectedOrder)}
-                        style={{
-                          padding: "9px 16px",
-                          background: "none",
-                          border: "1px solid #fca5a5",
-                          color: "#dc2626",
-                          borderRadius: "7px",
-                          fontSize: "14px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Eliminar
-                      </button>
-                    )}
+                      onBlur={() => scheduleSaveNotes(notesDraft)}
+                      placeholder="Proveedor, albarán, condiciones…"
+                      rows={3}
+                      style={{
+                        width: "520px",
+                        maxWidth: "100%",
+                        resize: "vertical",
+                        padding: "9px 12px",
+                        borderRadius: "8px",
+                        border: "1px solid #ddd",
+                        fontSize: "13px",
+                        boxSizing: "border-box",
+                        backgroundColor: "#fff",
+                        outline: "none",
+                      }}
+                    />
                   </div>
                 </div>
-                {/* Fila inferior: notas, ancho completo */}
-                <div style={{ marginTop: "16px" }}>
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                    Notas
-                  </div>
-                  <textarea
-                    value={notesDraft}
-                    onChange={(e) => {
-                      setNotesDraft(e.target.value)
-                      scheduleSaveNotes(e.target.value)
-                    }}
-                    onBlur={() => scheduleSaveNotes(notesDraft)}
-                    placeholder="Proveedor, albarán, condiciones…"
-                    rows={2}
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                  <button
+                    onClick={exportOrderPDF}
+                    disabled={exporting || orderDetail.length === 0}
                     style={{
-                      width: "100%",
-                      resize: "vertical",
-                      padding: "9px 12px",
-                      borderRadius: "8px",
-                      border: "1px solid #ddd",
-                      fontSize: "13px",
-                      boxSizing: "border-box",
+                      padding: "9px 16px",
                       backgroundColor: "#fff",
-                      outline: "none",
+                      color: "#2563eb",
+                      border: "1px solid #bfdbfe",
+                      borderRadius: "7px",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      cursor: exporting || orderDetail.length === 0 ? "not-allowed" : "pointer",
+                      opacity: orderDetail.length === 0 ? 0.5 : 1,
                     }}
-                  />
+                  >
+                    {exporting ? "Exportando…" : "📄 Exportar PDF"}
+                  </button>
+                  {selectedOrder.recibido && (
+                    <span style={{
+                      padding: "9px 16px",
+                      backgroundColor: "#dcfce7",
+                      color: "#166534",
+                      borderRadius: "7px",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                    }}>
+                      ✅ Pedido recibido
+                    </span>
+                  )}
+                  {!selectedOrder.recibido && (() => {
+                    const hasPending = orderDetail.some((it: any) => {
+                      const st = String(it.estado ?? "pendiente")
+                      return st === "pendiente" || st === "modificado"
+                    })
+                    return hasPending ? (
+                      <button
+                        onClick={handleReceiveAll}
+                        disabled={receiving}
+                        style={{
+                          padding: "9px 16px",
+                          backgroundColor: receiving ? "#ccc" : "#16a34a",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "7px",
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          cursor: receiving ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        ✓ Recibir todo
+                      </button>
+                    ) : null
+                  })()}
+                  {!selectedOrder.recibido && (
+                  <button
+                    onClick={() => handleDelete(selectedOrder)}
+                    style={{
+                      padding: "9px 16px",
+                      background: "none",
+                      border: "1px solid #fca5a5",
+                      color: "#dc2626",
+                      borderRadius: "7px",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                  )}
                 </div>
               </div>
 
               {/* TABLA DE PRODUCTOS */}
               <div style={{ padding: "20px 24px" }}>
                 {/* PROGRESO */}
-                {orderDetail.length > 0 ? (() => {
+                {orderDetail.length > 0 && (() => {
                   const totals = { recibido: 0, pendiente: 0, modificado: 0, cancelado: 0 }
                   for (const it of orderDetail as any[]) {
                     const st = String(it.estado ?? "pendiente")
@@ -824,7 +824,7 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
                       </div>
                     </div>
                   )
-                })() : null}
+                })()}
 
                 {grouped.length === 0 ? (
                   <div style={{ color: "#aaa", textAlign: "center", padding: "32px" }}>Sin artículos</div>
@@ -886,168 +886,165 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
                         </div>
                       </div>
 
-                      {/* Tallas — tabla compacta */}
-                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                        <thead>
-                          <tr style={{ backgroundColor: "#fafafa", borderBottom: "1px solid #f0f0f0" }}>
-                            <th style={tallaThStyle}>Talla</th>
-                            <th style={tallaThStyle}>Pedido</th>
-                            <th style={tallaThStyle}>Acordado</th>
-                            <th style={tallaThStyle}>Estado</th>
-                            <th style={tallaThStyle}>Stock tras recibir</th>
-                            <th style={{ ...tallaThStyle, textAlign: "right" }}>Acción</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {g.tallas.map((t: any, j: number) => {
-                            const isCompleted = !!selectedOrder.recibido
-                            const estado = isCompleted ? "recibido" : String(t.estado ?? "pendiente")
-                            const acordada = t.cantidad_acordada
-                            const effective = Number(acordada ?? t.cantidad) || 0
-                            const isEditing = editingItemId === t.itemId
-                            const canAct = !isCompleted && (estado === "pendiente" || estado === "modificado")
+                      {/* Tallas */}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "12px 16px" }}>
+                        {g.tallas.map((t: any, j: number) => {
+                          const isCompleted = !!selectedOrder.recibido
+                          const estado = isCompleted ? "recibido" : String(t.estado ?? "pendiente")
+                          const acordada = t.cantidad_acordada
+                          const effective = Number(acordada ?? t.cantidad) || 0
 
-                            const rowBg = estado === "recibido"
-                              ? "#f0fdf4"
-                              : estado === "cancelado"
-                              ? "#fafafa"
-                              : "transparent"
+                          const visual = (() => {
+                            if (estado === "recibido") return { bg: "#f0fdf4", border: "#bbf7d0", opacity: 1 }
+                            if (estado === "cancelado") return { bg: "#fff", border: "#e0e0e0", opacity: 0.55 }
+                            if (estado === "modificado") return { bg: "#fff", border: "#f59e0b", opacity: 1 }
+                            return { bg: "#fff", border: "#e0e0e0", opacity: 1 }
+                          })()
 
-                            const badgeEl = (() => {
-                              if (estado === "recibido") return <span style={{ ...tallaBadgeStyle, backgroundColor: "#dcfce7", color: "#166534" }}>Recibido</span>
-                              if (estado === "cancelado") return <span style={{ ...tallaBadgeStyle, backgroundColor: "#f3f4f6", color: "#6b7280" }}>Cancelado</span>
-                              if (estado === "modificado") return <span style={{ ...tallaBadgeStyle, backgroundColor: "#ffedd5", color: "#c2410c" }}>Modificado</span>
-                              return <span style={{ ...tallaBadgeStyle, backgroundColor: "#eff6ff", color: "#2563eb" }}>Pendiente</span>
-                            })()
+                          const showBadge = estado !== "pendiente"
+                          const badge = estado === "recibido"
+                            ? { text: "Recibido", bg: "#dcfce7", color: "#166534" }
+                            : estado === "cancelado"
+                            ? { text: "Cancelado", bg: "#f3f4f6", color: "#6b7280" }
+                            : estado === "modificado"
+                            ? { text: "Modificado", bg: "#ffedd5", color: "#c2410c" }
+                            : null
 
-                            return isEditing ? (
-                              // FILA EDICIÓN — ocupa todo el ancho, sin columnas apretadas
-                              <tr key={j} style={{ borderBottom: "1px solid #f5f5f5", backgroundColor: "#fffbeb" }}>
-                                <td colSpan={6} style={{ padding: "10px 14px" }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                                    <span style={{ fontWeight: 700, fontSize: "14px", minWidth: "32px" }}>{t.talla}</span>
-                                    <span style={{ fontSize: "13px", color: "#888" }}>Pedido: <b style={{ color: "#2563eb" }}>{t.cantidad} ud.</b></span>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <span style={{ fontSize: "13px", color: "#555" }}>Acordar:</span>
-                                      <input
-                                        autoFocus
-                                        type="number"
-                                        min={0}
-                                        value={editValue}
-                                        onChange={(e) => setEditValue(e.target.value)}
-                                        onKeyDown={(e) => {
-                                          if (e.key === "Enter") handleSaveModify(t.itemId)
-                                          if (e.key === "Escape") { setEditingItemId(null); setEditValue("") }
-                                        }}
-                                        style={{
-                                          width: "72px",
-                                          padding: "6px 8px",
-                                          borderRadius: "6px",
-                                          border: "1px solid #fcd34d",
-                                          fontSize: "14px",
-                                          textAlign: "center",
-                                          backgroundColor: "#fffbeb",
-                                        }}
-                                      />
-                                      <span style={{ fontSize: "12px", color: "#aaa" }}>ud. &nbsp;(0 = cancelar línea)</span>
-                                    </div>
-                                    <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
-                                      <button
-                                        onClick={() => handleSaveModify(t.itemId)}
-                                        disabled={receiving}
-                                        style={{
-                                          padding: "6px 16px",
-                                          borderRadius: "6px",
-                                          border: "none",
-                                          backgroundColor: receiving ? "#ccc" : "#111",
-                                          color: "#fff",
-                                          fontSize: "13px",
-                                          fontWeight: 600,
-                                          cursor: receiving ? "not-allowed" : "pointer",
-                                        }}
-                                      >
-                                        Guardar
-                                      </button>
-                                      <button
-                                        onClick={() => { setEditingItemId(null); setEditValue("") }}
-                                        style={{
-                                          padding: "6px 14px",
-                                          borderRadius: "6px",
-                                          border: "1px solid #e0e0e0",
-                                          backgroundColor: "#fff",
-                                          color: "#555",
-                                          fontSize: "13px",
-                                          fontWeight: 600,
-                                          cursor: "pointer",
-                                        }}
-                                      >
-                                        Cancelar
-                                      </button>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            ) : (
-                              // FILA NORMAL
-                              <tr
-                                key={j}
-                                style={{
-                                  borderBottom: "1px solid #f5f5f5",
-                                  backgroundColor: rowBg,
-                                  opacity: estado === "cancelado" ? 0.55 : 1,
-                                }}
-                              >
-                                {/* TALLA */}
-                                <td style={{ ...tallaTdStyle, fontWeight: 700, fontSize: "14px" }}>{t.talla}</td>
+                          const isEditing = editingItemId === t.itemId
+                          const canAct = !isCompleted && (estado === "pendiente" || estado === "modificado")
 
-                                {/* PEDIDO */}
-                                <td style={{ ...tallaTdStyle, color: "#2563eb", fontWeight: 600 }}>
-                                  {t.cantidad} ud.
-                                </td>
+                          return (
+                          <div
+                            key={j}
+                            style={{
+                              border: `1px solid ${visual.border}`,
+                              borderRadius: "8px",
+                              padding: "8px 14px",
+                              textAlign: "center",
+                              minWidth: "80px",
+                              backgroundColor: visual.bg,
+                              opacity: visual.opacity,
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                              <div style={{ fontSize: "13px", fontWeight: 700, color: "#111" }}>{t.talla}</div>
+                              {showBadge && badge && (
+                                <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", backgroundColor: badge.bg, color: badge.color }}>
+                                  {badge.text}
+                                </span>
+                              )}
+                            </div>
 
-                                {/* ACORDADO */}
-                                <td style={tallaTdStyle}>
-                                  {acordada !== null && acordada !== undefined && Number(acordada) !== Number(t.cantidad)
-                                    ? <span style={{ fontWeight: 700, color: "#c2410c" }}>{effective} ud.</span>
-                                    : <span style={{ color: "#aaa" }}>—</span>}
-                                </td>
+                            <div style={{ fontSize: "13px", color: "#2563eb", fontWeight: 600, marginTop: "4px" }}>
+                              +{t.cantidad} ud. pedidas
+                            </div>
+                            {acordada !== null && acordada !== undefined && Number(acordada) !== Number(t.cantidad) && (
+                              <div style={{ fontSize: "12px", color: "#c2410c", fontWeight: 700, marginTop: "4px" }}>
+                                → {effective} ud. acordadas
+                              </div>
+                            )}
 
-                                {/* ESTADO */}
-                                <td style={tallaTdStyle}>{badgeEl}</td>
+                            {estado === "recibido" && (
+                              <div style={{ fontSize: "11px", color: "#888", marginTop: "6px" }}>
+                                recibido: {t.cantidad_recibida ?? effective} · stock: {t.stock_actual}
+                              </div>
+                            )}
 
-                                {/* STOCK TRAS RECIBIR */}
-                                <td style={{ ...tallaTdStyle, color: "#888", fontSize: "13px" }}>
-                                  {estado === "recibido"
-                                    ? <span style={{ fontWeight: 600, color: "#111" }}>{t.stock_actual} ud.</span>
-                                    : "—"}
-                                </td>
+                            {canAct && !isEditing && (
+                              <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "10px" }}>
+                                <button
+                                  onClick={() => handleReceiveItem(t.itemId)}
+                                  disabled={receiving}
+                                  style={{
+                                    padding: "6px 10px",
+                                    borderRadius: "7px",
+                                    border: "none",
+                                    backgroundColor: receiving ? "#ccc" : "#16a34a",
+                                    color: "#fff",
+                                    fontSize: "12px",
+                                    fontWeight: 700,
+                                    cursor: receiving ? "not-allowed" : "pointer",
+                                  }}
+                                >
+                                  ✓ Recibir
+                                </button>
+                                {estado === "pendiente" && (
+                                  <button
+                                    onClick={() => { setEditingItemId(t.itemId); setEditValue(String(effective)) }}
+                                    disabled={receiving}
+                                    style={{
+                                      padding: "6px 10px",
+                                      borderRadius: "7px",
+                                      border: "1px solid #e0e0e0",
+                                      backgroundColor: "#fff",
+                                      color: "#555",
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      cursor: receiving ? "not-allowed" : "pointer",
+                                    }}
+                                  >
+                                    ✎ Modificar
+                                  </button>
+                                )}
+                              </div>
+                            )}
 
-                                {/* ACCIÓN */}
-                                <td style={{ ...tallaTdStyle, textAlign: "right" }}>
-                                  {canAct && estado === "pendiente" && (
-                                    <button
-                                      onClick={() => { setEditingItemId(t.itemId); setEditValue(String(effective)) }}
-                                      disabled={receiving}
-                                      style={{
-                                        padding: "5px 12px",
-                                        borderRadius: "6px",
-                                        border: "1px solid #e0e0e0",
-                                        backgroundColor: "#fff",
-                                        color: "#555",
-                                        fontSize: "12px",
-                                        fontWeight: 600,
-                                        cursor: receiving ? "not-allowed" : "pointer",
-                                      }}
-                                    >
-                                      ✎ Modificar
-                                    </button>
-                                  )}
-                                </td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
+                            {canAct && isEditing && (
+                              <div style={{ marginTop: "10px" }}>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  style={{
+                                    width: "90px",
+                                    padding: "6px 8px",
+                                    borderRadius: "7px",
+                                    border: "1px solid #ddd",
+                                    fontSize: "13px",
+                                    textAlign: "center",
+                                  }}
+                                />
+                                <div style={{ fontSize: "11px", color: "#aaa", marginTop: "6px" }}>0 para cancelar</div>
+                                <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "10px" }}>
+                                  <button
+                                    onClick={() => handleSaveModify(t.itemId)}
+                                    disabled={receiving}
+                                    style={{
+                                      padding: "6px 10px",
+                                      borderRadius: "7px",
+                                      border: "none",
+                                      backgroundColor: receiving ? "#ccc" : "#111",
+                                      color: "#fff",
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      cursor: receiving ? "not-allowed" : "pointer",
+                                    }}
+                                  >
+                                    Guardar
+                                  </button>
+                                  <button
+                                    onClick={() => { setEditingItemId(null); setEditValue("") }}
+                                    style={{
+                                      padding: "6px 10px",
+                                      borderRadius: "7px",
+                                      border: "1px solid #e0e0e0",
+                                      backgroundColor: "#fff",
+                                      color: "#555",
+                                      fontSize: "12px",
+                                      fontWeight: 700,
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   ))
                 )}
@@ -1081,29 +1078,4 @@ export default function OrderHistoryPage({ onNavigate }: { onNavigate: (page: an
       {dialog}
     </div>
   )
-}
-
-const tallaThStyle: React.CSSProperties = {
-  padding: "8px 14px",
-  textAlign: "left",
-  fontSize: "11px",
-  fontWeight: 700,
-  color: "#aaa",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-  whiteSpace: "nowrap",
-}
-
-const tallaTdStyle: React.CSSProperties = {
-  padding: "10px 14px",
-  fontSize: "13px",
-  verticalAlign: "middle",
-}
-
-const tallaBadgeStyle: React.CSSProperties = {
-  display: "inline-block",
-  padding: "3px 9px",
-  borderRadius: "20px",
-  fontSize: "11px",
-  fontWeight: 700,
 }

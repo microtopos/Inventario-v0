@@ -1,22 +1,22 @@
 import { useState } from "react"
 import { getDB } from "./db"
+import { useConfirm } from "./ConfirmDialog"
 import ColorSelect from "./ColorSelect"
 import DepartmentSelect from "./DepartmentSelect"
 import AppHeader from "./AppHeader"
-import { useToast } from "./Toast"
 
-export default function ProductForm({ onClose, onSaved, onNavigate }: any) {
+export default function ProductForm({ onClose, onSaved, onNavigate, draftCount }: any) {
   const [nombre, setNombre] = useState("")
   const [codigo, setCodigo] = useState("")
   const [tallas, setTallas] = useState<string[]>([])
   const [nuevaTalla, setNuevaTalla] = useState("")
   const [color, setColor] = useState("")
   const [departamento, setDepartamento] = useState<number | null>(null)
-  const toast = useToast()
+  const { alert, dialog } = useConfirm()
 
   async function save() {
     if (!nombre) {
-      toast.error("Falta el nombre", "Introduce un nombre para la prenda")
+      await alert("Introduce un nombre para la prenda")
       return
     }
     const db = await getDB()
@@ -33,7 +33,7 @@ export default function ProductForm({ onClose, onSaved, onNavigate }: any) {
       )
     }
     onSaved()
-    toast.success("Prenda guardada", `"${nombre}" añadida al inventario`)
+    await alert(`"${nombre}" añadida al inventario`, { confirmLabel: "Aceptar" })
     onClose()
   }
 
@@ -52,6 +52,7 @@ export default function ProductForm({ onClose, onSaved, onNavigate }: any) {
         onNavigate={onNavigate}
         onBack={onClose}
         title="Nueva prenda"
+        draftCount={draftCount}
       />
 
       <main style={{ maxWidth: "560px", margin: "0 auto", padding: "32px 24px" }}>
@@ -159,6 +160,7 @@ export default function ProductForm({ onClose, onSaved, onNavigate }: any) {
 
         </div>
       </main>
+      {dialog}
     </div>
   )
 }

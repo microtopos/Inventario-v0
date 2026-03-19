@@ -6,9 +6,10 @@ interface AppHeaderProps {
   onBack?: () => void
   title?: string
   actions?: React.ReactNode
+  draftCount?: number
 }
 
-export default function AppHeader({ page, onNavigate, onBack, title, actions }: AppHeaderProps) {
+export default function AppHeader({ page, onNavigate, onBack, title, actions, draftCount }: AppHeaderProps) {
   return (
     <header style={{
       backgroundColor: "#fff",
@@ -93,6 +94,9 @@ export default function AppHeader({ page, onNavigate, onBack, title, actions }: 
               fontSize: "14px",
               cursor: "pointer",
               transition: "color 0.15s, background-color 0.15s",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
             }}
             onMouseEnter={e => {
               if (page !== key) e.currentTarget.style.backgroundColor = "#f5f7ff"
@@ -102,6 +106,24 @@ export default function AppHeader({ page, onNavigate, onBack, title, actions }: 
             }}
           >
             {label}
+            {key === "orders" && draftCount != null && draftCount > 0 && (
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: "18px",
+                height: "18px",
+                padding: "0 5px",
+                borderRadius: "999px",
+                backgroundColor: page === "orders" ? "#2563eb" : "#e0e7ff",
+                color: page === "orders" ? "#fff" : "#2563eb",
+                fontSize: "11px",
+                fontWeight: 700,
+                lineHeight: 1,
+              }}>
+                {draftCount}
+              </span>
+            )}
             {page === key && (
               <span style={{
                 position: "absolute",

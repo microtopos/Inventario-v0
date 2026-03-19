@@ -9,9 +9,8 @@ import DepartmentSelect from "./DepartmentSelect"
 import { getImageUrl, invalidateImageCache } from "./getImageUrl"
 import AppHeader from "./AppHeader"
 import type { StockThresholds } from "./settingsService"
-import { useToast } from "./Toast"
 
-export default function ProductDetail({ product, onBack, onNavigate, onDuplicated, onProductUpdated, stockThresholds }: any) {
+export default function ProductDetail({ product, onBack, onNavigate, onDuplicated, onProductUpdated, stockThresholds, draftCount }: any) {
   const [sizes, setSizes] = useState<any[]>([])
   const [entrada, setEntrada] = useState<any>({})
   const [movements, setMovements] = useState<any[]>([])
@@ -36,7 +35,6 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
   const [imageUrl, setImageUrl] = useState<string>(product.imageUrl ?? "")
   const [uploadingImage, setUploadingImage] = useState(false)
   const { confirm, dialog } = useConfirm()
-  const toast = useToast()
 
   const thresholds: StockThresholds = stockThresholds ?? { red: 2, orange: 5 }
   function stockColor(stock: number): { bg: string; color: string } {
@@ -108,6 +106,7 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
         onBack={onBack}
         title={product.nombre}
         actions={duplicarBtn}
+        draftCount={draftCount}
       />
 
       {/* MODAL DUPLICAR */}
@@ -148,14 +147,9 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
                     onKeyDown={async e => {
                       if (e.key === "Enter") {
                         if (!dupNombre.trim()) return
-                        try {
-                          const newId = await duplicateProduct(product.id, dupNombre.trim(), dupCodigo.trim())
-                          setDuplicating(false)
-                          toast.success("Prenda duplicada", `Se creó "${dupNombre.trim()}"`)
-                          onDuplicated?.(newId)
-                        } catch (err: any) {
-                          toast.error("No se pudo duplicar", err?.message ?? String(err))
-                        }
+                        const newId = await duplicateProduct(product.id, dupNombre.trim(), dupCodigo.trim())
+                        setDuplicating(false)
+                        onDuplicated?.(newId)
                       }
                       if (e.key === "Escape") setDuplicating(false)
                     }}
@@ -179,14 +173,9 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
                 <button
                   onClick={async () => {
                     if (!dupNombre.trim()) return
-                    try {
-                      const newId = await duplicateProduct(product.id, dupNombre.trim(), dupCodigo.trim())
-                      setDuplicating(false)
-                      toast.success("Prenda duplicada", `Se creó "${dupNombre.trim()}"`)
-                      onDuplicated?.(newId)
-                    } catch (err: any) {
-                      toast.error("No se pudo duplicar", err?.message ?? String(err))
-                    }
+                    const newId = await duplicateProduct(product.id, dupNombre.trim(), dupCodigo.trim())
+                    setDuplicating(false)
+                    onDuplicated?.(newId)
                   }}
                   style={{
                     padding: "9px 20px", borderRadius: "8px", border: "none",

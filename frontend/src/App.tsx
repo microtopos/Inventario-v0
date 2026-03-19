@@ -12,6 +12,7 @@ import OrderHistoryPage from "./OrderHistoryPage"
 import AppHeader from "./AppHeader"
 import DashboardPage from "./DashboardPage"
 import { useConfirm } from "./ConfirmDialog"
+import { loadDraft } from "./orderService"
 import {
   exportInventarioPDF, exportInventarioXLSX,
   exportTallasPDF, exportTallasXLSX,
@@ -79,6 +80,7 @@ function App() {
   const [backingUp, setBackingUp] = useState(false)
   const [stockThresholds, setStockThresholdsState] = useState<StockThresholds>({ red: 2, orange: 5 })
   const [thresholdInputs, setThresholdInputs] = useState({ red: "2", orange: "5" })
+  const [draftCount, setDraftCount] = useState(0)
   const exportRef = useRef<HTMLDivElement>(null)
   const { confirm, dialog } = useConfirm()
   const toast = useToast()
@@ -90,6 +92,9 @@ function App() {
     getStockThresholds().then(t => {
       setStockThresholdsState(t)
       setThresholdInputs({ red: String(t.red), orange: String(t.orange) })
+    })
+    loadDraft().then(draft => {
+      setDraftCount(draft ? Object.keys(draft.items).filter(k => draft.items[Number(k)] > 0).length : 0)
     })
   }, [])
 
@@ -155,6 +160,7 @@ function App() {
     return <ProductDetail
       product={selectedProduct}
       stockThresholds={stockThresholds}
+      draftCount={draftCount}
       onBack={() => setSelectedProduct(null)}
       onNavigate={(p: string) => { setSelectedProduct(null); setPage(p) }}
       onDuplicated={async (newId: number) => {
@@ -176,20 +182,19 @@ function App() {
       <ProductForm
         onClose={() => setShowForm(false)}
         onNavigate={(p: string) => { setShowForm(false); setPage(p) }}
-        onSaved={async () => {
-          await loadInventory()
-        }}
+        onSaved={async () => { await loadInventory() }}
+        draftCount={draftCount}
       />
     )
   }
   if (page === "orders") {
-    return <OrderPage onNavigate={setPage} />
+    return <OrderPage onNavigate={setPage} onDraftChange={setDraftCount} />
   }
   if (page === "orderHistory") {
-    return <OrderHistoryPage onNavigate={setPage} />
+    return <OrderHistoryPage onNavigate={setPage} draftCount={draftCount} />
   }
   if (page === "dashboard") {
-    return <DashboardPage onNavigate={setPage as any} />
+    return <DashboardPage onNavigate={setPage as any} draftCount={draftCount} />
   }
 
   return (
@@ -198,6 +203,7 @@ function App() {
       <AppHeader
         page={page as any}
         onNavigate={setPage as any}
+        draftCount={draftCount}
         actions={
           <button
             onClick={() => setShowSettings(true)}
