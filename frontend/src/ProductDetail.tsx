@@ -17,10 +17,10 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
   const [movementsTotal, setMovementsTotal] = useState(0)
   const [movementsPage, setMovementsPage] = useState(0)
   const [movementsPageSize, setMovementsPageSize] = useState(10)
-  const [colorSaved, setColorSaved] = useState(false)
   const [editingInfo, setEditingInfo] = useState(false)
   const [editNombre, setEditNombre] = useState(product.nombre ?? "")
   const [editCodigo, setEditCodigo] = useState(product.codigo ?? "")
+  const [editColor, setEditColor] = useState(product.color ?? "")
   const [editDepartamentoId, setEditDepartamentoId] = useState<number | null>(product.departamento_id ?? null)
   const [editDepartamentoNombre, setEditDepartamentoNombre] = useState<string>(product.departamento ?? "")
   const [infoSaved, setInfoSaved] = useState(false)
@@ -264,9 +264,10 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
                           codigo: editCodigo.trim(),
                           departamento_id: editDepartamentoId,
                         })
-                        await updateProductColor(product.id, product.color ?? "")
+                        await updateProductColor(product.id, editColor)
                         product.nombre = editNombre.trim()
                         product.codigo = editCodigo.trim()
+                        product.color = editColor
                         product.departamento_id = editDepartamentoId
                         product.departamento = editDepartamentoNombre
                         setDisplayNombre(editNombre.trim())
@@ -275,10 +276,10 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
                         setEditingInfo(false)
                         setInfoSaved(true)
                         setTimeout(() => setInfoSaved(false), 2500)
-                        // Notificar al padre para que refresque selectedProduct e inventory
                         onProductUpdated?.({
                           nombre: editNombre.trim(),
                           codigo: editCodigo.trim(),
+                          color: editColor,
                           departamento_id: editDepartamentoId,
                           departamento: editDepartamentoNombre,
                         })
@@ -295,6 +296,7 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
                       onClick={() => {
                         setEditNombre(product.nombre ?? "")
                         setEditCodigo(product.codigo ?? "")
+                        setEditColor(product.color ?? "")
                         setEditDepartamentoId(product.departamento_id ?? null)
                         setEditingInfo(false)
                       }}
@@ -308,7 +310,14 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
                   </>
                 ) : (
                   <button
-                    onClick={() => setEditingInfo(true)}
+                    onClick={() => {
+                      setEditNombre(product.nombre ?? "")
+                      setEditCodigo(product.codigo ?? "")
+                      setEditColor(product.color ?? "")
+                      setEditDepartamentoId(product.departamento_id ?? null)
+                      setEditDepartamentoNombre(product.departamento ?? "")
+                      setEditingInfo(true)
+                    }}
                     style={{
                       background: "none", border: "1px solid #e0e0e0", borderRadius: "6px",
                       padding: "5px 12px", fontSize: "12px", color: "#888", cursor: "pointer",
@@ -370,22 +379,13 @@ export default function ProductDetail({ product, onBack, onNavigate, onDuplicate
                 <div style={fieldLabelStyle}>Color</div>
                 {editingInfo ? (
                   <ColorSelect
-                    value={product.color ?? ""}
-                    onChange={value => { product.color = value }}
+                    value={editColor}
+                    onChange={value => setEditColor(value)}
                   />
                 ) : (
-                  <ColorSelect
-                    value={product.color ?? ""}
-                    onChange={async (value) => {
-                      await updateProductColor(product.id, value)
-                      product.color = value
-                      setColorSaved(true)
-                      setTimeout(() => setColorSaved(false), 2500)
-                    }}
-                  />
-                )}
-                {colorSaved && !editingInfo && (
-                  <div style={{ fontSize: "11px", color: "#16a34a", fontWeight: 600, marginTop: "5px" }}>✓ Guardado</div>
+                  <div style={{ ...fieldValueStyle, color: product.color ? "#333" : "#ccc" }}>
+                    {product.color || "—"}
+                  </div>
                 )}
               </div>
 
