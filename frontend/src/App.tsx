@@ -12,7 +12,7 @@ import OrderHistoryPage from "./OrderHistoryPage"
 import AppHeader from "./AppHeader"
 import DashboardPage from "./DashboardPage"
 import { useConfirm } from "./ConfirmDialog"
-import { loadDraft, getDraftProductCount } from "./orderService"
+import { getDraftProductCount } from "./orderService"
 import {
   exportInventarioPDF, exportInventarioXLSX,
   exportTallasPDF, exportTallasXLSX,
