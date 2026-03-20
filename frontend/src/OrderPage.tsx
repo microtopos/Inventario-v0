@@ -92,7 +92,7 @@ export default function OrderPage({ onNavigate, onDraftChange }: { onNavigate: (
     if (!ready) return
     const count = construirPedido().length
     onDraftChange?.(count)
-  }, [pedido, ready])
+  }, [pedido, products, ready])
 
   // ── Helpers de estado ────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { getOrders, getOrderDetail, receivePrendaItems, modifyItem, updateOrderNotes, deleteOrder } from "./orderService"
+import { getOrders, getOrderDetail, receiveItem, receivePrendaItems, modifyItem, updateOrderNotes, deleteOrder } from "./orderService"
 import AppHeader from "./AppHeader"
 import { useConfirm } from "./ConfirmDialog"
 import { ordenarTallas } from "./sortTallas"
@@ -108,6 +108,23 @@ export default function OrderHistoryPage({ onNavigate, draftCount }: { onNavigat
       setOrders(ordersList)
       setSelectedOrder(row)
       setOrderDetail(detail)
+    }
+  }
+
+  async function handleReceiveItem(itemId: number) {
+    if (!selectedOrder) return
+    if (receivingRef.current) return
+    receivingRef.current = true
+    setReceiving(true)
+    try {
+      await receiveItem(itemId)
+      await refreshSelectedOrder()
+    } catch (e: any) {
+      console.error(e)
+      toast.error("No se pudo recibir", e?.message ?? String(e))
+    } finally {
+      receivingRef.current = false
+      if (mountedRef.current) setReceiving(false)
     }
   }
 
@@ -888,7 +905,7 @@ export default function OrderHistoryPage({ onNavigate, draftCount }: { onNavigat
                             const acordada = t.cantidad_acordada
                             const effective = Number(acordada ?? t.cantidad) || 0
                             const isEditing = editingItemId === t.itemId
-                            const canAct = !isCompleted && (estado === "pendiente" || estado === "modificado")
+                            const canAct = !isCompleted && (estado === "pendiente" || estado === "modificado" || estado === "cancelado")
 
                             const rowBg = estado === "recibido" ? "#f0fdf4" : estado === "cancelado" ? "#fafafa" : "transparent"
 
@@ -947,7 +964,7 @@ export default function OrderHistoryPage({ onNavigate, draftCount }: { onNavigat
                                 </td>
                               </tr>
                             ) : (
-                              <tr key={j} style={{ borderBottom: "1px solid #f5f5f5", backgroundColor: rowBg, opacity: estado === "cancelado" ? 0.55 : 1 }}>
+                              <tr key={j} style={{ borderBottom: "1px solid #f5f5f5", backgroundColor: rowBg }}>
                                 <td style={{ ...tallaTdStyle, fontWeight: 700, fontSize: "14px" }}>{t.talla}</td>
                                 <td style={{ ...tallaTdStyle, color: "#2563eb", fontWeight: 600 }}>{t.cantidad} ud.</td>
                                 <td style={tallaTdStyle}>
@@ -962,7 +979,7 @@ export default function OrderHistoryPage({ onNavigate, draftCount }: { onNavigat
                                     : "—"}
                                 </td>
                                 <td style={{ ...tallaTdStyle, textAlign: "right" }}>
-                                  {canAct && estado === "pendiente" && (
+                                  {canAct && (
                                     <button
                                       onClick={() => { setEditingItemId(t.itemId); setEditValue(String(effective)) }}
                                       disabled={receiving}

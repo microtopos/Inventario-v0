@@ -12,7 +12,7 @@ import OrderHistoryPage from "./OrderHistoryPage"
 import AppHeader from "./AppHeader"
 import DashboardPage from "./DashboardPage"
 import { useConfirm } from "./ConfirmDialog"
-import { loadDraft } from "./orderService"
+import { loadDraft, getDraftProductCount } from "./orderService"
 import {
   exportInventarioPDF, exportInventarioXLSX,
   exportTallasPDF, exportTallasXLSX,
@@ -94,9 +94,7 @@ function App() {
       setStockThresholdsState(t)
       setThresholdInputs({ red: String(t.red), orange: String(t.orange) })
     })
-    loadDraft().then(draft => {
-      setDraftCount(draft ? Object.keys(draft.items).filter(k => draft.items[Number(k)] > 0).length : 0)
-    })
+    getDraftProductCount().then(setDraftCount)
   }, [])
 
   // Cierra el menú al hacer clic fuera

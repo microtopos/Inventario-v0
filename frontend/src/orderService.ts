@@ -128,8 +128,8 @@ export async function modifyItem(itemId: number, nuevaCantidad: number | null): 
   if (!it) throw new Error("Ítem no encontrado")
 
   const estado = String(it.estado ?? "pendiente")
-  if (estado !== "pendiente") {
-    throw new Error("Solo se puede modificar un ítem pendiente")
+  if (estado !== "pendiente" && estado !== "modificado" && estado !== "cancelado") {
+    throw new Error("Solo se puede modificar un ítem pendiente, modificado o cancelado")
   }
 
   const next = nuevaCantidad === null ? null : Math.max(0, Number(nuevaCantidad) || 0)
@@ -168,6 +168,19 @@ export async function deleteOrder(orderId: number) {
 // Un borrador es un pedido con borrador = 1.
 // Solo puede existir uno a la vez. Se crea al primer cambio y se reutiliza
 // entre sesiones hasta que se confirma o descarta explícitamente.
+
+/** Devuelve el número de productos distintos en el borrador activo (0 si no hay borrador). */
+export async function getDraftProductCount(): Promise<number> {
+  const db = await getDB()
+  const rows: any = await db.select(`
+    SELECT COUNT(DISTINCT t.producto_id) as total
+    FROM pedido_items pi
+    JOIN pedidos p ON p.id = pi.pedido_id
+    JOIN tallas t ON t.id = pi.talla_id
+    WHERE p.borrador = 1 AND pi.cantidad > 0
+  `)
+  return Number(rows[0]?.total) || 0
+}
 
 /** Carga el borrador activo. Devuelve { id, items } o null si no existe. */
 export async function loadDraft(): Promise<{ id: number; items: Record<number, number>; notas: string } | null> {
