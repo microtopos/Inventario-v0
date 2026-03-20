@@ -5,7 +5,7 @@ import { writeFile } from "@tauri-apps/plugin-fs"
 import { open as openDialog } from "@tauri-apps/plugin-dialog"
 import { getInventory, getProductsWithSizes, getAllMovements } from "./inventoryService"
 import { ordenarTallas } from "./sortTallas"
-import { getExportDir, setExportDir } from "./settingsService"
+import { getExportDir, setExportDir, getStockThresholds } from "./settingsService"
 
 // ─── Fecha ────────────────────────────────────────────────────────────────────
 
@@ -119,10 +119,11 @@ function pdfFooter(doc: jsPDF) {
 
 export async function exportInventarioPDF() {
   const data: any = await getInventory()
+  const { red: umbral } = await getStockThresholds()
   const doc = new jsPDF()
 
   const totalUd = data.reduce((s: number, p: any) => s + p.stock, 0)
-  const bajos   = data.filter((p: any) => p.stock <= 2).length
+  const bajos   = data.filter((p: any) => p.stock <= umbral).length
   const sub = `${data.length} prendas · ${totalUd} unidades en stock` + (bajos > 0 ? ` · ${bajos} con stock bajo` : "")
   pdfHeader(doc, "Inventario completo", sub)
 
@@ -166,7 +167,7 @@ export async function exportInventarioPDF() {
     doc.text(item.color || "—",        ML + 96,  y + 4)
     doc.text(item.departamento || "—", ML + 126, y + 4)
 
-    const bajo = item.stock <= 2
+    const bajo = item.stock <= umbral
     doc.setFont("helvetica", bajo ? "bold" : "normal")
     doc.setTextColor(...(bajo ? C.alerta : C.negro))
     doc.text(String(item.stock), PW - MR - 2, y + 4, { align: "right" })
@@ -186,7 +187,7 @@ export async function exportInventarioPDF() {
   doc.text(`Total: ${data.length} prendas, ${totalUd} unidades en stock.`, ML + 2, y)
   if (bajos > 0) {
     doc.setTextColor(...C.alerta)
-    doc.text(`Prendas con stock bajo (≤ 2 ud.): ${bajos}`, ML + 2, y + 6)
+    doc.text(`Prendas con stock bajo (≤ ${umbral} ud.): ${bajos}`, ML + 2, y + 6)
     doc.setTextColor(...C.negro)
   }
 
@@ -214,6 +215,7 @@ export async function exportInventarioXLSX() {
 
 export async function exportTallasPDF() {
   const productos: any = await getProductsWithSizes()
+  const { red: umbral } = await getStockThresholds()
   const doc = new jsPDF()
   pdfHeader(doc, "Stock por tallas", `${productos.length} prendas`)
 
@@ -263,7 +265,7 @@ export async function exportTallasPDF() {
         }
       }
 
-      const bajo = t.stock <= 2
+      const bajo = t.stock <= umbral
       doc.setDrawColor(...(bajo ? C.alerta : C.linea))
       doc.setLineWidth(bajo ? 0.6 : 0.3)
       doc.rect(x, y - 1, colW - 1, colH, "S")
