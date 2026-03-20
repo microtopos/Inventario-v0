@@ -16,6 +16,7 @@ type SyncState = "idle" | "saving" | "saved" | "error"
 export default function OrderPage({ onNavigate, onDraftChange }: { onNavigate: (page: any) => void; onDraftChange?: (count: number) => void }) {
   const [products, setProducts] = useState<any[]>([])
   const [search, setSearch] = useState("")
+  const [deptFilter, setDeptFilter] = useState<number | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [pedido, setPedido] = useState<Record<number, number>>({})
   const [notas, setNotas] = useState("")
@@ -443,9 +444,19 @@ export default function OrderPage({ onNavigate, onDraftChange }: { onNavigate: (
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
-  const filtered = products.filter(p =>
-    (p.nombre + " " + (p.color ?? "")).toLowerCase().includes(search.toLowerCase())
-  )
+  const departments = Array.from(
+    new Map(
+      products
+        .filter(p => p.departamento_id != null && p.departamento)
+        .map(p => [p.departamento_id, p.departamento])
+    ).entries()
+  ).sort((a, b) => String(a[1]).localeCompare(String(b[1])))
+
+  const filtered = products.filter(p => {
+    const matchesSearch = (p.nombre + " " + (p.color ?? "")).toLowerCase().includes(search.toLowerCase())
+    const matchesDept = deptFilter === null || p.departamento_id === deptFilter
+    return matchesSearch && matchesDept
+  })
   const items = construirPedido()
   const total = totalPedido()
 
@@ -608,10 +619,29 @@ export default function OrderPage({ onNavigate, onDraftChange }: { onNavigate: (
               onChange={e => setSearch(e.target.value)}
               style={{
                 width: "100%", padding: "9px 14px", borderRadius: "6px",
-                border: "1px solid #ddd", fontSize: "14px", marginBottom: "10px",
+                border: "1px solid #ddd", fontSize: "14px", marginBottom: "8px",
                 boxSizing: "border-box",
               }}
             />
+            {departments.length > 0 && (
+              <select
+                value={deptFilter ?? ""}
+                onChange={e => setDeptFilter(e.target.value ? Number(e.target.value) : null)}
+                style={{
+                  width: "100%", padding: "8px 12px", borderRadius: "6px",
+                  border: `1px solid ${deptFilter ? "#2563eb" : "#ddd"}`,
+                  fontSize: "13px", marginBottom: "10px",
+                  boxSizing: "border-box", backgroundColor: deptFilter ? "#eff6ff" : "#fff",
+                  cursor: "pointer", color: deptFilter ? "#1d4ed8" : "#888",
+                  fontWeight: deptFilter ? 600 : 400,
+                }}
+              >
+                <option value="">Todos los departamentos</option>
+                {departments.map(([id, nombre]) => (
+                  <option key={id} value={id}>{nombre}</option>
+                ))}
+              </select>
+            )}
             <div style={{
               border: "1px solid #e0e0e0", borderRadius: "8px", overflow: "hidden",
               backgroundColor: "#fff", maxHeight: "520px", overflowY: "auto",

@@ -41,7 +41,7 @@ export async function getLowStockTallas(threshold: number): Promise<Record<numbe
 export async function getProductsWithSizes(): Promise<any[]> {
   const db = await getDB()
   const productos: any = await db.select(`
-    SELECT p.id, p.codigo, p.nombre, p.color, d.nombre as departamento
+    SELECT p.id, p.codigo, p.nombre, p.color, p.departamento_id, d.nombre as departamento
     FROM productos p
     LEFT JOIN departamentos d ON d.id = p.departamento_id
     ORDER BY p.nombre
